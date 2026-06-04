@@ -1,16 +1,66 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>e-MiniShopRDC - Feed Acheteur</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fil_actu.css') }}">
+</head>
 
-{% block title %}Accueil - Espace Sécurisé{% endblock %}
+<body>
 
-{% block content %}
-<article>
-    <header>
-        <h1>Bienvenue sur votre espace sécurisé !</h1>
-    </header>
-    <p>Vous êtes connecté avec l'adresse : <strong>{{ user.email }}</strong></p>
-    <p>Cette page est strictement protégée. Un utilisateur non connecté ne peut pas la voir.</p>
-    <footer>
-        <a href="{{ url_for('auth.deconnexion') }}" class="secondary">Se déconnecter</a>
-    </footer>
-</article>
-{% endblock %}
+<header>
+  <div class="logo">e-MiniShopRDC</div>
+
+  
+
+  <div class="search-bar">
+    <input type="text" placeholder="Rechercher un produit, une marque...">
+  </div>
+
+  <div class="panier">
+    <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" >
+  </div>
+  
+  <div class="panier">
+    <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" >
+  </div>
+
+  <div class="panier">
+    <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
+  </div>
+
+
+
+  <div class="profile" >
+    <img src="{{ user.profil }}" class="profil-img">
+  </div>
+</header>
+
+<main>
+  <div class="product-grid">
+
+    {% for p in produits %}
+    <div class="product-card"
+         >
+
+      <!-- Image du produit -->
+      <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-image">
+
+      <div class="product-info">
+        <h3>{{ p.name }}</h3>
+        <p class="price">{{ p.price }} $</p>
+
+        <!-- Nom de la boutique -->
+        <p class="shop-name">Shop: {{ p.nom_boutique }}</p>
+      </div>
+
+    </div>
+    {% endfor %}
+
+  </div>
+</main>
+<footer><a href="{{ url_for('auth.deconnexion') }}" class="secondary">Se déconnecter</a></footer>
+
+</body>
+</html>
