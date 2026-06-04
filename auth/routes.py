@@ -16,7 +16,14 @@ def inscription():
     if current_user.is_authenticated:
         return redirect(url_for('auth.index'))
     if request.method == 'POST':
+        nom = request.form['last_name']
+        prenom = request.form['first_name']
+        postnom = request.form['middle_name']
         email = request.form['email']
+        naissance = request.form['naissance']
+        adresse = request.form['adresse']
+        nom_boutique = request.form['nom_boutique']
+        description = request.form['description']
         password = request.form['password']
         
         if not email or not password:
@@ -30,7 +37,7 @@ def inscription():
         conn = User.get_db_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("INSERT INTO users (email, password) VALUES (%s, %s)", (email, hashed_password))
+            cursor.execute("INSERT INTO users (prenom, nom, postnom, email, naissance, password, description, adresse, nom_boutique) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)", (prenom, nom, postnom, email, naissance, hashed_password, description, adresse, nom_boutique))
             conn.commit()
             flash('Inscription réussie !', 'success')
             return redirect(url_for('auth.connexion'))
