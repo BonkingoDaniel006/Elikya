@@ -1,0 +1,75 @@
+
+  .timeline-container {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 30px;
+    text-align: left;
+  }
+  .timeline {
+    position: relative;
+    padding-left: 40px;
+    margin-top: 20px;
+  }
+  /* Ligne de fond blanche/grisée */
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: #e0e0e0; 
+    border-radius: 2px;
+  }
+  /* Ligne de progression rose animée */
+  .timeline-progress {
+    position: absolute;
+    left: 14px;
+    top: 0;
+    width: 4px;
+    background: #ff4081; /* Rose du bouton de la page de paiement */
+    border-radius: 2px;
+    height: 0; /* Géré par JS */
+    transition: height 1s ease-in-out;
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 40px;
+  }
+  .timeline-item:last-child {
+    margin-bottom: 0;
+  }
+  /* Boules blanches par défaut */
+  .circle {
+    position: absolute;
+    left: -35px;
+    top: 0;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 2px solid #ccc;
+    transition: background 0.5s ease, border-color 0.5s ease;
+    z-index: 1;
+  }
+  /* Boules roses une fois activées via JS */
+  .circle.active {
+    background: #ff4081;
+    border-color: #ff4081;
+    box-shadow: 0 0 10px rgba(255, 64, 129, 0.4);
+  }
+  .content {
+    padding-top: 2px;
+  }
+  .content h3 {
+    margin: 0 0 5px 0;
+    color: #4b0082;
+    font-size: 16px;
+  }
+  .content p {
+    margin: 0;
+    font-size: 14px;
+    color: #777;
+  }

@@ -47,8 +47,8 @@ def connexion():
     if current_user.is_authenticated:
         return redirect(url_for('auth.index'))
     if request.method == 'POST':
-        email = request.form.get('email').strip()
-        password = request.form.get('password').strip()
+        email = (request.form.get('email') or '').strip()
+        password = (request.form.get('password') or '').strip()
         user = User.get_by_email(email)
 
         if user and bcrypt.check_password_hash(user.password, password):
@@ -56,7 +56,7 @@ def connexion():
             return redirect(url_for('auth.index'))
         else:
             flash('Identifiants incorrects', 'danger')
-    return render_template('con.html')
+    return render_template('connexion.html')
 @auth_bp.route('/index')
 @login_required
 def index():
