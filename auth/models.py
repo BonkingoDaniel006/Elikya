@@ -1,0 +1,40 @@
+from flask_login import UserMixin
+import mysql.connector
+from config import Config
+
+class User(UserMixin):
+    def __init__(self, id, email, password):
+        self.id = id
+        self.email = email
+        self.password = password
+
+    @staticmethod
+    def get_db_connection():
+        return mysql.connector.connect(
+            host=Config.MYSQL_HOST,
+            user=Config.MYSQL_USER,
+            password=Config.MYSQL_PASSWORD,
+            database=Config.MYSQL_DB
+        )
+    @classmethod
+    def get_by_id(cls, user_id):
+        conn = cls.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, email, password FROM users WHERE id = %s", (user_id,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if row:
+            return cls(row['id'], row['email'], row['password'])
+        return None
+    @classmethod
+    def get_by_email(cls, email):
+        conn = cls.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT id, email, password FROM users WHERE email = %s", (email,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if row:
+            return cls(row['id'], row['email'], row['password'])
+        return None
