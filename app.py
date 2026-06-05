@@ -28,17 +28,27 @@ def load_user(user_id):
 
 def init_db():
     """Crée la table 'users' de manière sécurisée si elle n'existe pas."""
-    conn = mysql.connector.connect(
-        host=Config.MYSQL_HOST,
-        user=Config.MYSQL_USER,
-        password=Config.MYSQL_PASSWORD,
-        database=Config.MYSQL_DB
-    )
-    cursor = conn.cursor()
-    
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        conn = mysql.connector.connect(
+            host=Config.MYSQL_HOST,
+            user=Config.MYSQL_USER,
+            password=Config.MYSQL_PASSWORD,
+            database=Config.MYSQL_DB
+        )
+        cursor = conn.cursor()
+        
+        # On lit le fichier schema.sql pour s'assurer que la structure est à jour
+        with open('schema.sql', 'r') as f:
+            sql_commands = f.read().split(';')
+            for command in sql_commands:
+                if command.strip():
+                    cursor.execute(command)
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        print(f"Erreur d'initialisation de la base : {e}")
 
 if __name__ == '__main__':
     app = create_app()

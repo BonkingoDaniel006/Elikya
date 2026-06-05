@@ -4,7 +4,9 @@
 
 # Elikya - Plateforme E-commerce / Gestion de Boutique
 
-Elikya est une application web développée avec Flask permettant aux utilisateurs de s'inscrire, de créer une boutique et de gérer leurs informations. Le projet utilise une architecture modulaire avec des Blueprints et une base de données MySQL.
+Elikya est une application web développée avec Flask permettant aux utilisateurs de vendre et acheter des produits neuf ou de seconde main en ligne partout en Republique Democratique du Congo.
+
+
 
 ## 🚀 Technologies utilisées
 
