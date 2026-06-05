@@ -1,4 +1,15 @@
-Flask
-Flask-Login
-Flask-Bcrypt
-mysql-connector-python
+# Framework Web
+Flask~=3.0.0
+
+# Authentification & Sécurité
+Flask-Login~=0.6.3
+Flask-Bcrypt~=1.0.1
+
+# Base de données
+mysql-connector-python~=9.1.0
+
+# Configuration & Environnement
+python-dotenv~=1.0.1
+
+# Serveur de production (recommandé)
+gunicorn~=23.0.0

@@ -1,0 +1,17 @@
+# variable de la base de donnée
+.env
+
+# Environnement virtuel
+.venv/
+venv/
+__pycache__/
+
+# Fichiers Flask/Python
+*.pyc
+instance/
+.pytest_cache/
+
+site-pour-vente-de-fleur/
+
+# Fichiers uploadés par les utilisateurs
+static/uploads/
