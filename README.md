@@ -48,7 +48,7 @@ source venv/bin/activate  # Sur Windows: venv\Scripts\activate
 
 ### 3. Installer les dépendances
 ```bash
-pip install flask flask-login flask-bcrypt mysql-connector-python python-dotenv
+pip install -r requirements.txt
 ```
 
 ### 4. Configurer la base de données
