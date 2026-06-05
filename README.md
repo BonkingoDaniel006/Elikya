@@ -97,9 +97,8 @@ L'application sera accessible sur `http://127.0.0.1:5000`.
 
 ## 📝 Notes pour la suite du développement
 
-1. **Initialisation DB :** La fonction `init_db()` dans `app.py` est prête mais ne contient pas encore les requêtes de création de table automatique (`CREATE TABLE IF NOT EXISTS`).
-2. **Modèles :** Le modèle `User` dans `auth/models.py` ne récupère actuellement que l'`id`, l'`email` et le `password`. Il faudra l'étendre pour inclure les autres champs (nom, boutique, etc.) si nécessaire dans l'objet `current_user`.
-3. **Templates :** S'assurer que les fichiers `inscription.html`, `connexion.html` et `index.html` sont présents dans le dossier `templates/`.
+1. **Modèles :** Le modèle `User` dans `auth/models.py` ne récupère actuellement que l'`id`, l'`email` et le `password`. Il faudra l'étendre pour inclure les autres champs (nom, boutique, etc.) si nécessaire dans l'objet `current_user`.
+2. **Templates :** S'assurer que les fichiers `inscription.html`, `connexion.html` et `index.html` sont présents dans le dossier `templates/`.
 
 ---
 *Documentation générée pour faciliter la reprise du projet.*
