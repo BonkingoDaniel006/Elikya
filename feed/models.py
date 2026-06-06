@@ -1,0 +1,67 @@
+import mysql.connector
+from mysql.connector import pooling
+from config import Config
+import random
+
+
+
+# Création d'un pool de connexions global
+db_pool = pooling.MySQLConnectionPool(
+    pool_name="mypool",
+    pool_size=5,
+    host=Config.MYSQL_HOST,
+    user=Config.MYSQL_USER,
+    password=Config.MYSQL_PASSWORD,
+    database=Config.MYSQL_DB
+)
+
+class Produits():
+    def __init__(self, id, seller_id, name, price, description, image_url):
+        self.id = id
+        self.seller_id = seller_id
+        self.name = name
+        self.price = price
+        self.description = description
+        self.image_url = image_url
+
+    @staticmethod
+    def get_db_connection():
+        return db_pool.get_connection()
+    
+    @classmethod
+    def get_by_id(cls):
+        conn = cls.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            SELECT p.*, b.nom_boutique 
+            FROM produits p 
+            JOIN users b ON p.seller_id = b.id
+            """)
+        produits = cursor.fetchall()
+        random.shuffle(produits)
+        cursor.close()
+        conn.close()
+        return produits
+    
+
+    @classmethod
+    def get_by_name(cls, name):
+        conn = cls.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM produits WHERE name = %s", (name,))
+        result = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return result
+    
+    @classmethod
+    def get_by_seller(cls, nom_boutique):
+        conn= cls.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM produits WHERE nom_boutique = %s", (nom_boutique,))
+        resultat = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return resultat
+
+    

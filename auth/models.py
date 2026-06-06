@@ -21,6 +21,15 @@ class User(UserMixin):
         self.prenom = prenom
         self.nom_boutique = nom_boutique
 
+    def get_claims(self):
+        """Returns user information as a dictionary."""
+        return {
+            "id": self.id,
+            "email": self.email,
+            "first_name": self.prenom,
+            "nom_boutique": self.nom_boutique
+        }
+
     @staticmethod
     def get_db_connection():
         return db_pool.get_connection()

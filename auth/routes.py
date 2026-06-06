@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from flask_mail import Message
 from ext import bcrypt, mail
 from auth.models import User
+from feed.models import Produits
 import secrets
 import time
 
@@ -113,7 +114,15 @@ def connexion():
 @auth_bp.route('/index')
 @login_required
 def index():
-    return render_template('index.html', user=current_user)
+    produits = Produits.get_by_id()
+    claims = current_user.get_claims()
+    
+    return render_template(
+        "index.html",
+        name=claims.get("first_name"),
+        produits=produits,
+        user=claims
+    )
 @auth_bp.route('/deconnexion')
 @login_required
 def deconnexion():
