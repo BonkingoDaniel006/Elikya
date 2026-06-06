@@ -47,3 +47,24 @@ class User(UserMixin):
         if row:
             return cls(row['id'], row['email'], row['password'], row['prenom'], row['nom_boutique'])
         return None
+
+    @classmethod
+    def create_user(cls, data, hashed_password):
+        """Insère un nouvel utilisateur en base de données après validation OTP."""
+        conn = cls.get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            INSERT INTO users (prenom, nom, postnom, email, naissance, password, description, adresse, nom_boutique)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        values = (
+            data['prenom'], data['nom'], data['postnom'], data['email'],
+            data['naissance'], hashed_password, data['description'],
+            data['adresse'], data['nom_boutique']
+        )
+        try:
+            cursor.execute(query, values)
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()

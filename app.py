@@ -1,6 +1,6 @@
 from flask import Flask
 from config import Config
-from ext import bcrypt, login_manager
+from ext import bcrypt, login_manager, mail
 from auth.routes import auth_bp
 from auth.models import User
 
@@ -10,6 +10,7 @@ def create_app():
 
     # Initialisation des extensions avec l'application Flask
     bcrypt.init_app(app)
+    mail.init_app(app)
     login_manager.init_app(app)
 
     # Enregistrement du Blueprint d'authentification

@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Vérification - Elikya</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dashboard.css') }}">
+    <style>
+        .verify-container { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .timer { font-weight: bold; color: #ff4081; font-size: 1.2em; margin: 15px 0; }
+        .error { color: red; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <h2>Vérification de l'email</h2>
+        <p>Un code secret a été envoyé à <strong>{{ email }}</strong>. Veuillez le saisir ci-dessous.</p>
+        
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        <div id="countdown" class="timer">Chargement du compte à rebours...</div>
+
+        <form action="{{ url_for('auth.valider_otp') }}" method="POST">
+            <input type="text" name="code" placeholder="Code à 6 chiffres" required maxlength="6" style="text-align:center; font-size: 20px; letter-spacing: 5px;">
+            <br><br>
+            <button type="submit" class="details-btn" style="padding: 10px 30px; width: 100%;">Vérifier</button>
+        </form>
+        <br>
+        <a href="{{ url_for('auth.inscription') }}" style="color: #666; text-decoration: none; font-size: 0.8em;">Retour à l'inscription</a>
+    </div>
+
+    <script>
+        const expiresAt = {{ expires_at }};
+        function updateTimer() {
+            const now = Math.floor(Date.now() / 1000);
+            const timeLeft = Math.max(0, Math.floor(expiresAt - now));
+            
+            if (timeLeft <= 0) {
+                document.getElementById('countdown').innerHTML = "Code expiré !";
+                return;
+            }
+
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('countdown').innerHTML = `Expire dans : ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        }
+        setInterval(updateTimer, 1000);
+        updateTimer();
+    </script>
+</body>
+</html>
