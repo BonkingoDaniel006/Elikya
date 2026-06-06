@@ -10,10 +10,10 @@ Elikya est une application web développée avec Flask permettant aux utilisateu
 
 ## 🚀 Technologies utilisées
 
-- **Backend :** Python 3.12+, Flask
+- **Backend :** Python 3.12+, Flask (render)
 - **Authentification :** Flask-Login
 - **Sécurité :** Flask-Bcrypt (hachage des mots de passe)
-- **Base de données :** MySQL (via `mysql-connector-python`)
+- **Base de données :** MySQL (via `mysql-connector-python` and alwaysdata)
 - **Configuration :** Python-dotenv
 
 ## 📂 Structure du Projet
