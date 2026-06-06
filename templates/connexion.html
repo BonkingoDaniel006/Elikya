@@ -4,14 +4,15 @@
   <meta charset="UTF-8">
   <!-- INDISPENSABLE POUR LE MOBILE -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>Login elikya</title>
+  <title>Connexion - Elikya</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='connexion.css') }}">
 </head>
 
 <body>
 
   <div class="login-container">
-    <h1>Login <br><span>elikya</span></h1>
+    <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Elikya Logo" style="width: 140px; margin: 0 auto 15px auto; display: block;">
+    <h1 style="text-align: center;">Login <br><span>Elikya</span></h1>
 
     <form action="{{ url_for('auth.connexion') }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

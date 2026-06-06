@@ -2,14 +2,17 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Création de compte<br> Elikya"</title>
+  <title>Inscription - Elikya</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='compte_acheteur.css') }}">
 
 </head>
 <body>
 
-  <h1 style="text-align:center;">Création de compte<br> Elikya</h1>
+  <div style="text-align: center; margin-top: 20px;">
+    <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Elikya Logo" style="width: 160px;">
+    <h1>Création de compte Elikya</h1>
+  </div>
 
   <form action="{{ url_for('auth.inscription') }}" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
