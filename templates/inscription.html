@@ -12,6 +12,8 @@
   <h1 style="text-align:center;">Création de compte<br> Elikya</h1>
 
   <form action="{{ url_for('auth.inscription') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
     <label for="nom_user"> Nom :</label>
     <input type="text" id="nom_user" name="last_name" required>
     <label for="prenom_user"> Prénom :</label>
