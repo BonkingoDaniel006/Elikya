@@ -1,8 +1,8 @@
 
 
-# 📖 La Bible Technique d'Elikya
+# Elikya
 
-Elikya est une plateforme e-commerce modulaire construite avec le framework **Flask**. Ce document détaille l'architecture logicielle, la structure des données et la logique métier de l'application, étape par étape.
+Elikya est une plateforme e-commerce construite avec le framework **Flask**. Ce document détaille l'architecture logicielle, la structure des données et la logique métier de l'application, étape par étape.
 
 ---
 

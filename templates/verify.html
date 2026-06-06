@@ -24,7 +24,7 @@
         <form action="{{ url_for('auth.valider_otp') }}" method="POST">
             <input type="text" name="code" placeholder="Code à 6 chiffres" required maxlength="6" style="text-align:center; font-size: 20px; letter-spacing: 5px;">
             <br><br>
-            <button type="submit" class="details-btn" style="padding: 10px 30px; width: 100%;">Vérifier</button>
+            <button type="submit" class="details-btn" style="padding: 10px 30px; width: 100%; background-color: #ff4081; ">Vérifier</button>
         </form>
         <br>
         <a href="{{ url_for('auth.inscription') }}" style="color: #666; text-decoration: none; font-size: 0.8em;">Retour à l'inscription</a>

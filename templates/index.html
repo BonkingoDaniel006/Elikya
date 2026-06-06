@@ -12,28 +12,26 @@
 <header>
   <div class="logo">e-MiniShopRDC</div>
 
-  
-
   <div class="search-bar">
     <input type="text" placeholder="Rechercher un produit, une marque...">
   </div>
 
-  <div class="panier">
-    <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" >
-  </div>
-  
-  <div class="panier">
-    <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" >
-  </div>
+  <div class="header-icons">
+    <div class="panier">
+      <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" >
+    </div>
+    
+    <div class="panier">
+      <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" >
+    </div>
 
-  <div class="panier">
-    <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
-  </div>
+    <div class="panier">
+      <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
+    </div>
 
-
-
-  <div class="profile" >
-    <img src="{{ user.profil }}" class="profil-img">
+    <div class="profile">
+      <img src="{{ user.profil }}" class="profil-img">
+    </div>
   </div>
 </header>
 

@@ -123,3 +123,68 @@ main {
     }
 
 
+/* --- Styles par défaut (Pour PC / Écrans larges) --- */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background-color: transparent; /* Conserve ton dégradé de fond actuel */
+  gap: 15px;
+}
+
+.logo {
+  font-weight: bold;
+  font-size: 1.2rem;
+  white-space: nowrap; /* Évite que le logo s'écrive sur 2 lignes */
+}
+
+.search-bar {
+  flex-grow: 1; /* Permet à la barre de recherche de prendre tout l'espace disponible */
+  max-width: 600px; /* Évite qu'elle soit trop immense sur très grand écran */
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: 1px solid #ccc;
+  outline: none;
+}
+
+.header-icons {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* Espace entre les icônes */
+}
+
+.panier-img, .profil-img {
+  width: 30px;  /* Ajuste selon la taille voulue */
+  height: 30px;
+  object-fit: contain;
+}
+
+
+/* --- Styles pour Mobile (Écrans inférieurs à 768px) --- */
+@media (max-width: 768px) {
+  header {
+    flex-wrap: wrap; /* Autorise les éléments à passer à la ligne */
+    padding: 10px;
+  }
+
+  .logo {
+    order: 1; /* Reste en haut à gauche */
+  }
+
+  .header-icons {
+    order: 2; /* Se place en haut à droite */
+    gap: 10px;
+  }
+
+  .search-bar {
+    order: 3; /* Passe à la ligne en dessous */
+    width: 100%; /* Prend 100% de la largeur du téléphone */
+    max-width: none;
+    margin-top: 5px;
+  }
+}
