@@ -3,6 +3,7 @@ from config import Config
 from ext import bcrypt, login_manager, mail, csrf
 from auth.routes import auth_bp
 from auth.models import User
+from profils.routes import buyer_bp
 
 def create_app():
     app = Flask(__name__)
@@ -16,6 +17,7 @@ def create_app():
 
     # Enregistrement du Blueprint d'authentification
     app.register_blueprint(auth_bp)
+    app.register_blueprint(buyer_bp)
 
     return app
 

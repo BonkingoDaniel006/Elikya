@@ -32,9 +32,11 @@
       <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
     </div>
 
-    <div class="profile">
-      <img src="{{ user.profil }}" class="profil-img">
-    </div>
+    <a href="{{ url_for('buyer.profil_acheteur') }}">
+      <div class="profile">
+        <img src="{{ user.profil }}" class="profil-img">
+      </div>
+    </a>
   </div>
 </header>
 
