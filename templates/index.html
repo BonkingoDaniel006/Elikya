@@ -20,9 +20,11 @@
   </div>
 
   <div class="header-icons">
+    
     <div class="panier">
-      <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" >
+      <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='{{ url_for('auth.index') }}'">
     </div>
+  
     
     <div class="panier">
       <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" >
