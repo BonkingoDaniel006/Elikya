@@ -80,3 +80,67 @@ class Buyer():
         cursor.close()
         conn.close()
         return cart_items, total
+    
+
+
+
+class Seller ():
+    def __init__(self, id, prenom, nom, postnom, email, naissance, description, profil, adresse, nom_boutique):
+        self.id = id
+        self.prenom = prenom
+        self.nom = nom
+        self.postnom = postnom
+        self.email = email
+        self.naissance = naissance
+        self.description = description
+        self.profil = profil
+        self.adresse = adresse
+        self.nom_boutique = nom_boutique
+
+    def get_claims(self):
+        return {
+            "id": self.id,
+            "nom": self.nom,
+            "prenom": self.prenom,
+            "postnom": self.postnom,
+            "email": self.email,
+            "naissance": self.naissance,
+            "description":self.description,
+            "profil": self.profil,
+            "adresse": self.adresse,
+            "nom_boutique": self.nom_boutique
+        }
+    @staticmethod
+    def get_db_connection():
+        return db_pool.get_connection()
+    @classmethod
+    def get_by_id(cls, user_id):
+        conn = cls.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
+        row = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        if row:
+            return cls(
+                id=row['id'],
+                prenom=row['prenom'],
+                nom=row['nom'],
+                postnom=row['postnom'],
+                email=row['email'],
+                naissance=row['naissance'],
+                description=row['description'],
+                profil=row['profil'],
+                adresse=row['adresse'],
+                nom_boutique=row['nom_boutique']
+            )
+        return None
+    @classmethod
+    def get_produits(cls, user_id):
+        conn= cls.get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM produits WHERE seller_id = %s", (user_id,))
+        produits = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return produits

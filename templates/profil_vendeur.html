@@ -18,20 +18,20 @@
   </div>
 
   <div class="panier">
-  <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='/acceuil'">
+  <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='{{ url_for('auth.index') }}'">
 </div>
   
   <div class="panier">
-  <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" onclick="window.location.href='/notifications'">
+  <img src="" alt="notifications" class="panier-img" onclick="window.location.href='/notifications'">
 </div>
 
   <div class="panier">
-  <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" onclick="window.location.href='/paiement'">
+  <img src="" alt="panier" class="panier-img" onclick="window.location.href='/paiement'">
 </div>
 
 
 
-  <div class="profile" onclick="window.location.href='{{ url_for('profil_acheteur') }}'">
+  <div class="profile" onclick="window.location.href='{{ url_for('buyer.profil_acheteur') }}'">
     <img src="{{ user.profil }}" class="profil-img">
   </div>
 </header>
@@ -42,25 +42,27 @@
     <div class="shop-info">
       <h2 class="username"> {{ user.nom_boutique or 'Boutique sans nom' }}</h2>
       <p>{{ user.description or 'Aucune description disponible.' }}</p>
-      <a href="{{ url_for('notifications') }}" class="subscribe-btn">mes notifications</a>
+      <a href="" class="subscribe-btn">mes notifications</a>
     </div>
   </div>
 
   <h2>Produits</h2>
   <div class="product-grid">
     {% for p in produits %}
-    <div class="product-card" onclick="window.location.href='{{ url_for('vendeur_details', product_id=p.id) }}'">
+    <div class="product-card" onclick="window.location.href='{{ url_for('feed.vendeur_details', product_id=p.id) }}'">
       <img src="{{ p.image_url }}" alt="{{ p.name }}">
-      <h3>{{ p.name }}</h3>
-      <p>{{ p.description }}</p>
-      <strong class="price">{{ p.price }} $</strong>
+      <div class="product-info">
+        <h3>{{ p.name }}</h3>
+        <p class="description">{{ p.description }}</p>
+        <strong class="price">{{ p.price }} $</strong>
+      </div>
     </div>
     {% endfor %}
 </div> <br> <br>
 
-<a href="{{ url_for('ajouter_produit') }}" class="subscribe-btn">Ajouter un produit</a> <br><br><br>
+<a href="" class="subscribe-btn">Ajouter un produit</a> <br><br><br>
 
-<a href="{{ url_for('acceuil') }}" class="subscribe-btn">Acceuil</a>
+<a href="{{ url_for('auth.index') }}" class="subscribe-btn">Accueil</a>
 
 
 {% if produits|length == 0 %}

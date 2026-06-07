@@ -139,7 +139,7 @@ header {
     /* ===== Grille Produits ===== */
     .product-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 25px;
     }
 
@@ -162,7 +162,7 @@ header {
     }
 
     .product-info {
-      padding: 25px;
+      padding: 20px 30px;
     }
 
     .product-info h3 {
