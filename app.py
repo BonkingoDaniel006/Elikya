@@ -5,6 +5,7 @@ from auth.routes import auth_bp
 from auth.models import User
 from profils.routes import buyer_bp, seller_bp
 from feed.routes import feed_bp
+from panier.routes import panier_bp
 
 def create_app():
     app = Flask(__name__)
@@ -21,7 +22,7 @@ def create_app():
     app.register_blueprint(buyer_bp)
     app.register_blueprint(feed_bp)
     app.register_blueprint(seller_bp)
-
+    app.register_blueprint(panier_bp)
 
     return app
 

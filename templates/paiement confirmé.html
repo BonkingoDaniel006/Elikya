@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Paiement confirmé - e-MiniShopRDC</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='paiement_confirme.css') }}">
+
+</head>
+<body>
+
+<header>
+  <div class="logo">e-MiniShopRDC</div>
+
+  
+
+  <div class="search-bar">
+    <input type="text" placeholder="Rechercher un produit, une marque...">
+  </div>
+
+  <div class="panier">
+  <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='/acceuil'">
+</div>
+  
+  <div class="panier">
+  <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" onclick="window.location.href='/notifications'">
+</div>
+
+  <div class="panier">
+  <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" onclick="window.location.href='/paiement'">
+</div>
+
+
+
+  <div class="profile" onclick="window.location.href='{{ url_for('profil_acheteur') }}'">
+    <img src="{{ user.profil }}" class="profil-img">
+  </div>
+</header>
+
+<main>
+  <h2>Paiement confirmé !</h2>
+
+  <div class="info-box">
+    <p>Merci pour votre achat. Votre commande a été confirmé avec succès.</p>
+    <p>Bfast Organise la livraison. vous serez contacté ulterieurment.</p>
+  </div>
+
+  <!-- Bouton pour contacter le vendeur -->
+  <a href="{{ url_for('suivre_commande') }}" class="button-contact">Suivre ma commande</a>
+
+</main>
+
+</body>
+</html>
