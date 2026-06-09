@@ -49,6 +49,15 @@
   </nav>
 </header>
 
+<nav class="profile-tabs">
+  <a href="{{ url_for('buyer.profil_acheteur') }}" class="tab-item {{ 'active' if request.endpoint == 'buyer.profil_acheteur' }}">
+    <i class="fa-solid fa-circle-user"></i> Profil Acheteur
+  </a>
+  <a href="{{ url_for('seller.seller_dashboard') }}" class="tab-item {{ 'active' if request.endpoint == 'seller.seller_dashboard' }}">
+    <i class="fa-solid fa-shop"></i> Profil Vendeur
+  </a>
+</nav>
+
 <main>
   <div class="shop-header">
     <img src="{{ user.profil }}" alt="Profil Acheteur">
@@ -72,11 +81,6 @@
     </div>
     {% endfor %}
 </div> <br> <br>
-
-<a href="" class="subscribe-btn">Ajouter un produit</a> <br><br><br>
-
-<a href="{{ url_for('auth.index') }}" class="subscribe-btn">Accueil</a>
-
 
 {% if produits|length == 0 %}
 <p>Aucun produit pour le moment.</p>
