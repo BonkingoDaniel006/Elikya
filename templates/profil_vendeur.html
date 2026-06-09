@@ -61,7 +61,7 @@
   <h2>Produits</h2>
   <div class="product-grid">
     {% for p in produits %}
-    <div class="product-card" onclick="window.location.href='{{ url_for('feed.vendeur_details', product_id=p.id) }}'">
+    <div class="product-card" onclick="window.location.href='{{ url_for('produit.detail_produit', product_id=p['id']) }}'">
       <img src="{{ p.image_url }}" alt="{{ p.name }}">
       <div class="product-info">
         <h3>{{ p.name }}</h3>
