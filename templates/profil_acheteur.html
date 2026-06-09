@@ -23,18 +23,26 @@
       <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='{{ url_for('auth.index') }}'">
     </div>
   
-    
-    <div class="panier">
+    <a href="{{ url_for('notification.notifications') }}">
+      <div class="panier">
       <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" >
     </div>
-
-    <div class="panier">
-      <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
-    </div>
+    </a>
+    
+    <a href="{{url_for('panier.panier') }}">
+      <div class="panier">
+        <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
+      </div>
+    </a>
+    
 
     <a href="{{ url_for('buyer.profil_acheteur') }}">
       <div class="profile">
-        <img src="{{ user.profil }}" class="profil-img">
+        {% if user and user.get('profil') %} {# Vérifie si 'user' est un dictionnaire et contient la clé 'profil' #}
+          <img src="{{ user['profil'] }}" class="profil-img">
+        {% else %}
+          <img src="{{ url_for('static', filename='profils/default_profile.png') }}" alt="Profil" class="profil-img">
+        {% endif %}
       </div>
     </a>
   </div>

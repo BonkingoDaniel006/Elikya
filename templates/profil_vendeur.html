@@ -9,30 +9,42 @@
 <body>
 
 <header>
-  <div class="logo">e-MiniShopRDC</div>
-
-  
+  <div class="logo">
+    <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Elikya Logo" style="height: 65px; vertical-align: middle;">
+  </div>
 
   <div class="search-bar">
     <input type="text" placeholder="Rechercher un produit, une marque...">
   </div>
 
-  <div class="panier">
-  <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='{{ url_for('auth.index') }}'">
-</div>
+  <div class="header-icons">
+    
+    <div class="panier">
+      <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='{{ url_for('auth.index') }}'">
+    </div>
   
-  <div class="panier">
-  <img src="" alt="notifications" class="panier-img" onclick="window.location.href='/notifications'">
-</div>
+    <a href="{{ url_for('notification.notifications') }}">
+      <div class="panier">
+      <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" >
+    </div>
+    </a>
+    
+    <a href="{{url_for('panier.panier') }}">
+      <div class="panier">
+        <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
+      </div>
+    </a>
+    
 
-  <div class="panier">
-  <img src="" alt="panier" class="panier-img" onclick="window.location.href='/paiement'">
-</div>
-
-
-
-  <div class="profile" onclick="window.location.href='{{ url_for('buyer.profil_acheteur') }}'">
-    <img src="{{ user.profil }}" class="profil-img">
+    <a href="{{ url_for('buyer.profil_acheteur') }}">
+      <div class="profile">
+        {% if user and user.get('profil') %} {# Vérifie si 'user' est un dictionnaire et contient la clé 'profil' #}
+          <img src="{{ user['profil'] }}" class="profil-img">
+        {% else %}
+          <img src="{{ url_for('static', filename='profils/default_profile.png') }}" alt="Profil" class="profil-img">
+        {% endif %}
+      </div>
+    </a>
   </div>
 </header>
 
