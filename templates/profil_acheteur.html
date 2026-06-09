@@ -48,6 +48,15 @@
   </nav>
 </header>
 
+<nav class="profile-tabs">
+  <a href="{{ url_for('buyer.profil_acheteur') }}" class="tab-item {{ 'active' if request.endpoint == 'buyer.profil_acheteur' }}">
+    <i class="fa-solid fa-circle-user"></i> Profil Acheteur
+  </a>
+  <a href="{{ url_for('seller.seller_dashboard') }}" class="tab-item {{ 'active' if request.endpoint == 'seller.seller_dashboard' }}">
+    <i class="fa-solid fa-shop"></i> Profil Vendeur
+  </a>
+</nav>
+
 <main>
 
   <div class="profil-container">
@@ -93,8 +102,6 @@
       </div>
     </div>
   </div>
-  <a href="{{ url_for('auth.index') }}" class="modifer-btn">Accueil</a>
-  <a href="{{ url_for('seller.seller_dashboard') }}">Ma Boutique</a>
 
 </main>
 

@@ -14,7 +14,7 @@ header {
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 1001;
   gap: 5px;
 }
 
@@ -235,4 +235,3 @@ main {
         flex-direction: column;
       }
     }
-
