@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paiement Mobile - BotayExpress</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='connexion.css') }}">
+</head>
+<body>
+  <h1 style="text-align:center;">Finaliser le paiement <br>{{ method.replace('-', ' ').title() }}</h1>
+  
+  <form action="{{ url_for('panier.initiate_mobile_payment') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label for="full_name">Nom complet du titulaire :</label>
+    <input type="text" id="full_name" name="full_name" value="{{ user.first_name }} {{ user.last_name }}" required>
+    
+    <label for="phone">Numéro de téléphone Mobile Money :</label>
+    <input type="tel" id="phone" name="phone" placeholder="Ex: +243812345678" required>
+    
+    <p style="font-size: 0.9em; color: #666; margin-top: 10px;">
+      Une fois validé, vous recevrez une demande de confirmation sur votre téléphone.
+    </p>
+
+    <button type="submit">Lancer le paiement</button>
+    <br>
+    <a href="{{ url_for('panier.panier') }}" style="display: block; text-align: center; margin-top: 15px;">Annuler et retourner au panier</a>
+  </form>
+</body>
+</html>
