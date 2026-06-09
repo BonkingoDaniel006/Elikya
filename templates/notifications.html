@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Paiement confirmé - e-MiniShopRDC</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='paiement_confirme.css') }}">
-
+<title>Notifications - e-MiniShopRDC</title>
+<link rel="stylesheet" href="/static/notif_vendeur.css">
 </head>
 <body>
+
 <header>
   <div class="logo">
     <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Elikya Logo" style="height: 65px; vertical-align: middle;">
@@ -49,15 +49,39 @@
 </header>
 
 <main>
-  <h2>Paiement confirmé !</h2>
+  <h2>Notifications</h2>
 
-  <div class="info-box">
-    <p>Merci pour votre achat. Votre commande a été confirmé avec succès.</p>
-    <p>Bfast Organise la livraison. vous serez contacté ulterieurment.</p>
+  <div class="notification">
+    <img src="boutique1.jpg" alt="Boutique KasaTech">
+    <div class="notification-content">
+      <p>Nouvelle Commande : <strong>iphone17 Normal.</strong></p>
+      <div class="time">Il y a 2h</div>
+    </div>
   </div>
 
-  <!-- Bouton pour contacter le vendeur -->
-  <a href="{{ url_for('suivre_commande') }}" class="button-contact">Suivre ma commande</a>
+  <div class="notification">
+    <img src="boutique2.jpg" alt="Boutique TechWorld">
+    <div class="notification-content">
+      <p>Avis sur produits : <strong>Casque Gaming</strong> </p>
+      <div class="time">Hier</div>
+    </div>
+  </div>
+
+  <div class="notification">
+    <img src="produit1.jpg" alt="Produit PS5">
+    <div class="notification-content">
+      <p>Réponse à votre commentaire sur <strong>PS5 Pro</strong> </p>
+      <div class="time">Il y a 3h</div>
+    </div>
+  </div>
+
+  <div class="notification">
+    <img src="produit2.jpg" alt="Casque Gaming">
+    <div class="notification-content">
+      <p>Nouvelle Commande: <strong>Casque Gaming</strong></p>
+      <div class="time">Il y a 1h</div>
+    </div>
+  </div>
 
 </main>
 
