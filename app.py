@@ -5,6 +5,7 @@ from auth.routes import auth_bp
 from auth.models import User
 from profils.routes import buyer_bp, seller_bp
 from feed.routes import feed_bp
+from produits.routes import produit_bp
 from panier.routes import panier_bp
 
 def create_app():
@@ -21,6 +22,7 @@ def create_app():
     app.register_blueprint(auth_bp)
     app.register_blueprint(buyer_bp)
     app.register_blueprint(feed_bp)
+    app.register_blueprint(produit_bp)
     app.register_blueprint(seller_bp)
     app.register_blueprint(panier_bp)
 

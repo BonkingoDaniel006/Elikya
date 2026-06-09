@@ -1,15 +1,4 @@
-import mysql.connector
-from mysql.connector import pooling
-from config import Config
-
-db_pool = pooling.MySQLConnectionPool(
-    pool_name="mypool",
-    pool_size=5,
-    host=Config.MYSQL_HOST,
-    user=Config.MYSQL_USER,
-    password=Config.MYSQL_PASSWORD,
-    database=Config.MYSQL_DB
-)
+from ext import get_db_connection
 
 class Panier():
     def __init__(self, id, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, product_price, product_description, product_image_url, seller_id, seller_name, quantite, prix_total):
@@ -44,17 +33,13 @@ class Panier():
             "quantite": self.quantite,
             "prix_total": self.prix_total
         }
-    @staticmethod
-    def get_db_connection():
-        return db_pool.get_connection()
-    
     @classmethod
     def get_panier(cls, user_id):
-        conn = cls.get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         try:
             # Suppression de ORDER BY created_at DESC au cas où la colonne n'existerait pas
-            cursor.execute("SELECT * FROM panier2 WHERE buyer_id = %s", (user_id,))
+            cursor.execute("SELECT * FROM panier WHERE buyer_id = %s", (user_id,))
             cart_items = cursor.fetchall()
             total = 0
             for item in cart_items:
@@ -70,6 +55,3 @@ class Panier():
         conn.close()
         return cart_items, total
     
-
-
-
