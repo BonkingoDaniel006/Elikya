@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Notifications - e-MiniShopRDC</title>
 <link rel="stylesheet" href="/static/notif_vendeur.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='fil_actu.css') }}">
 </head>
 <body>
 
@@ -13,7 +14,6 @@
     <div class="logo-container {{ 'active-home' if request.endpoint == 'auth.index' }}">
       <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
     </div>
-
     <div class="search-bar">
       <input type="text" placeholder="Rechercher un produit..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
     </div>
@@ -28,7 +28,7 @@
       <li><a href="{{ url_for('auth.index') }}" class="nav-item">
         <img src="{{ url_for('static', filename='profils/home.png') }}" class="nav-icon"> Accueil
       </a></li>
-      <li><a href="{{ url_for('notification.notifications') }}" class="nav-item">
+      <li><a href="{{ url_for('notification.notifications') }}" class="nav-item {{ 'active' if request.endpoint == 'notification.notifications' }}">
         <img src="{{ url_for('static', filename='profils/notification.png') }}" class="nav-icon"> Notifications
       </a></li>
       <li><a href="{{ url_for('panier.panier') }}" class="nav-item">
@@ -37,9 +37,9 @@
       <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
         <div class="profile" style="width:30px; height:30px;">
           {% if user and user.get('profil') %}
-            <img src="{{ user['profil'] }}" class="profil-img" style="width:100%; border-radius:50%;">
+            <img src="{{ user['profil'] }}" class="profil-img">
           {% else %}
-            <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" style="width:100%; border-radius:50%;">
+            <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img">
           {% endif %}
         </div> Profil
       </a></li>
