@@ -1,0 +1,111 @@
+from ext import get_db_connection
+
+
+
+class Details_produit():
+    def __init__(self, id, seller_id, name, price, description, image_url, seller_name=None):
+        self.id = id
+        self.seller_id = seller_id
+        self.name = name
+        self.price = price
+        self.description = description
+        self.image_url = image_url
+        self.seller_name = seller_name
+
+    def get_claims(self):
+        return {
+            "id": self.id,
+            "seller_id": self.seller_id,
+            "name": self.name,
+            "price": self.price,
+            "description": self.description,
+            "image_url": self.image_url,
+            "seller_name": self.seller_name
+        }
+    @classmethod
+    def get_by_id(cls, product_id):
+        """Récupère les détails d'un produit par son ID"""
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("""
+                SELECT p.*, u.nom_boutique AS seller_name 
+                FROM produits p 
+                JOIN users u ON p.seller_id = u.id 
+                WHERE p.id = %s
+            """, (product_id,))
+            row = cursor.fetchone()
+            if row:
+                return cls(
+                    id=row['id'],
+                    seller_id=row['seller_id'],
+                    name=row['name'],
+                    price=row['price'],
+                    description=row['description'],
+                    image_url=row['image_url'],
+                    seller_name=row['seller_name']
+                )
+            return None
+        finally:
+            cursor.close()
+            conn.close()
+
+
+class Add_panier():
+    def __init__(self, id, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, product_price, product_description, product_image_url, seller_id, seller_name, quantite, prix_total):
+        self.id = id
+        self.buyer_id = buyer_id
+        self.buyer_first_name = buyer_first_name
+        self.buyer_last_name = buyer_last_name
+        self.product_id = product_id
+        self.product_name = product_name
+        self.product_price = product_price
+        self.product_description = product_description
+        self.product_image_url = product_image_url
+        self.seller_id = seller_id
+        self.seller_name = seller_name
+        self.quantite = quantite
+        self.prix_total = prix_total
+
+
+    def get_claims(self):
+        return {
+            "id": self.id,
+            "buyer_id": self.buyer_id,
+            "buyer_first_name": self.buyer_first_name,
+            "buyer_last_name": self.buyer_last_name,
+            "product_id": self.product_id,
+            "product_name": self.product_name,
+            "product_price": self.product_price,
+            "product_description": self.product_description,
+            "product_image_url": self.product_image_url,
+            "seller_id": self.seller_id,
+            "seller_name": self.seller_name,
+            "quantite": self.quantite,
+            "prix_total": self.prix_total
+        }
+
+    @classmethod
+    def create(cls, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, 
+               product_price, product_description, product_image_url, seller_id, 
+               seller_name, quantite, prix_total):
+        """Insère un nouvel article dans le panier (table panier)"""
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO panier (
+                    buyer_id, buyer_first_name, buyer_last_name,
+                    product_id, product_name, product_price, product_description, product_image_url,
+                    seller_id, seller_name, quantite, prix_total
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                buyer_id, buyer_first_name, buyer_last_name,
+                product_id, product_name, product_price, product_description, product_image_url,
+                seller_id, seller_name, quantite, prix_total
+            ))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()

@@ -38,7 +38,11 @@
 
     <a href="{{ url_for('buyer.profil_acheteur') }}">
       <div class="profile">
-        <img src="{{ user.profil }}" class="profil-img">
+        {% if user and user.get('profil') %} {# Vérifie si 'user' est un dictionnaire et contient la clé 'profil' #}
+          <img src="{{ user['profil'] }}" class="profil-img">
+        {% else %}
+          <img src="{{ url_for('static', filename='profils/default_profile.png') }}" alt="Profil" class="profil-img">
+        {% endif %}
       </div>
     </a>
   </div>
@@ -46,25 +50,24 @@
 
 <main>
   <div class="product-grid">
-
     {% for p in produits %}
-    <div class="product-card"
-         >
+    <a href="{{ url_for('produit.detail_produit', product_id=p['id']) }}" style="text-decoration: none; color: inherit;">
+      <div class="product-card" >
 
-      <!-- Image du produit -->
-      <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-image">
+        <!-- Image du produit -->
+        <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-image">
 
-      <div class="product-info">
-        <h3>{{ p.name }}</h3>
-        <p class="price">{{ p.price }} $</p>
+        <div class="product-info">
+          <h3>{{ p.name }}</h3>
+          <p class="price">{{ p.price }} $</p>
 
-        <!-- Nom de la boutique -->
-        <p class="shop-name">Shop: {{ p.nom_boutique }}</p>
+          <!-- Nom de la boutique -->
+          <p class="shop-name">Shop: {{ p.nom_boutique }}</p>
+        </div>
+
       </div>
-
-    </div>
+    </a>
     {% endfor %}
-
   </div>
 </main>
 <footer><a href="{{ url_for('auth.deconnexion') }}" class="secondary">Se déconnecter</a></footer>

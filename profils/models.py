@@ -1,15 +1,4 @@
-import mysql.connector
-from mysql.connector import pooling
-from config import Config
-
-db_pool = pooling.MySQLConnectionPool(
-    pool_name="mypool",
-    pool_size=5,
-    host=Config.MYSQL_HOST,
-    user=Config.MYSQL_USER,
-    password=Config.MYSQL_PASSWORD,
-    database=Config.MYSQL_DB
-)
+from ext import get_db_connection
 
 class Buyer():
     def __init__(self, email, id, prenom, nom, postnom, description, profil, adresse):
@@ -34,13 +23,9 @@ class Buyer():
             "adresse": self.adresse
 
         }
-    @staticmethod
-    def get_db_connection():
-        return db_pool.get_connection()
-
     @classmethod
     def get_by_id(cls, user_id):
-        conn = cls.get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT id, prenom, nom, postnom, email, description, profil, adresse FROM users WHERE id = %s", (user_id,))
         row = cursor.fetchone()
@@ -61,11 +46,11 @@ class Buyer():
     
     @classmethod
     def get_panier(cls, user_id):
-        conn = cls.get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         try:
             # Suppression de ORDER BY created_at DESC au cas où la colonne n'existerait pas
-            cursor.execute("SELECT * FROM panier2 WHERE buyer_id = %s", (user_id,))
+            cursor.execute("SELECT * FROM panier WHERE buyer_id = %s", (user_id,))
             cart_items = cursor.fetchall()
             total = 0
             for item in cart_items:
@@ -110,12 +95,10 @@ class Seller ():
             "adresse": self.adresse,
             "nom_boutique": self.nom_boutique
         }
-    @staticmethod
-    def get_db_connection():
-        return db_pool.get_connection()
+
     @classmethod
     def get_by_id(cls, user_id):
-        conn = cls.get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
         row = cursor.fetchone()
@@ -137,7 +120,7 @@ class Seller ():
         return None
     @classmethod
     def get_produits(cls, user_id):
-        conn= cls.get_db_connection()
+        conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT * FROM produits WHERE seller_id = %s", (user_id,))
         produits = cursor.fetchall()

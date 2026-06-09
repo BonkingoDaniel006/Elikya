@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ produit.name }} - Elikya</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='details_du_produit.css') }}">
+</head>
+
+<body>
+
+<header>
+  <div class="logo">
+    <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Elikya Logo" style="height: 65px; vertical-align: middle;">
+  </div>
+
+  <div class="search-bar">
+    <input type="text" placeholder="Rechercher un produit, une marque...">
+  </div>
+
+  <div class="header-icons">
+    
+    <div class="panier">
+      <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='{{ url_for('auth.index') }}'">
+    </div>
+  
+    
+    <div class="panier">
+      <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" >
+    </div>
+    <a href="{{url_for('panier.panier') }}">
+      <div class="panier">
+        <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
+      </div>
+    </a>
+    
+
+    <a href="{{ url_for('buyer.profil_acheteur') }}">
+      <div class="profile">
+        {% if user and user.get('profil') %} {# Vérifie si 'user' est un dictionnaire et contient la clé 'profil' #}
+          <img src="{{ user['profil'] }}" class="profil-img">
+        {% else %}
+          <img src="{{ url_for('static', filename='profils/default_profile.png') }}" alt="Profil" class="profil-img">
+        {% endif %}
+      </div>
+    </a>
+  </div>
+</header>
+
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}" style="
+            background-color: {% if category == 'success' %}#d4edda{% elif category == 'danger' %}#f8d7da{% elif category == 'warning' %}#fff3cd{% else %}#e2e3e5{% endif %};
+            color: {% if category == 'success' %}#155724{% elif category == 'danger' %}#721c24{% elif category == 'warning' %}#856404{% else %}#383d41{% endif %};
+            padding: 10px 15px;
+            border-left: 4px solid {% if category == 'success' %}#28a745{% elif category == 'danger' %}#dc3545{% elif category == 'warning' %}#ffc107{% else %}#adb5bd{% endif %};
+            margin-bottom: 15px;
+            border-radius: 4px;
+          ">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  <div class="product-container">
+
+    <!-- IMAGE DU PRODUIT -->
+    <div class="product-images">
+      <img src="{{ produit.image_url }}" alt="{{ produit.name }}">
+    </div>
+
+    <!-- INFORMATIONS DU PRODUIT -->
+    <div class="product-details">
+
+      <div>
+        <h1>{{ produit.name }}</h1>
+
+
+        <div class="price">
+          {{ produit.price }} $
+        </div>
+
+        <div class="shop-name">
+          Shop: {{ produit.seller_name }}
+        </div>
+
+        <div class="description">
+          {{ produit.description }}
+        </div>
+      </div>
+
+      <!-- BOUTONS -->
+      <div class="actions">
+        <form action="{{ url_for('produit.add_panier', product_id=produit.id) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="number" name="quantite" value="1" min="1" class= "nombre">
+          <button type="submit" class="buy-btn">Ajouter au panier 🛒</button>
+        </form>
+        <button class="subscribe-btn">S’abonner à la boutique</button>
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+</body>
+</html>
