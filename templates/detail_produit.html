@@ -5,48 +5,48 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ produit.name }} - Elikya</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='details_du_produit.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='fil_actu.css') }}">
 </head>
 
 <body>
 
 <header>
-  <div class="logo">
-    <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Elikya Logo" style="height: 65px; vertical-align: middle;">
-  </div>
-
-  <div class="search-bar">
-    <input type="text" placeholder="Rechercher un produit, une marque...">
-  </div>
-
-  <div class="header-icons">
-    
-    <div class="panier">
-      <img src="{{ url_for('static', filename='profils/home.png') }}" alt="home" class="panier-img" onclick="window.location.href='{{ url_for('auth.index') }}'">
+  <div class="header-top">
+    <div class="logo-container {{ 'active-home' if request.endpoint == 'auth.index' }}">
+      <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
     </div>
-  
-    <a href="{{ url_for('notification.notifications') }}">
-      <div class="panier">
-      <img src="{{ url_for('static', filename='profils/notification.png') }}" alt="notifications" class="panier-img" >
-    </div>
-    </a>
-    
-    <a href="{{url_for('panier.panier') }}">
-      <div class="panier">
-        <img src="{{ url_for('static', filename='profils/panier.png') }}" alt="panier" class="panier-img" >
-      </div>
-    </a>
-    
 
-    <a href="{{ url_for('buyer.profil_acheteur') }}">
-      <div class="profile">
-        {% if user and user.get('profil') %} {# Vérifie si 'user' est un dictionnaire et contient la clé 'profil' #}
-          <img src="{{ user['profil'] }}" class="profil-img">
-        {% else %}
-          <img src="{{ url_for('static', filename='profils/default_profile.png') }}" alt="Profil" class="profil-img">
-        {% endif %}
-      </div>
-    </a>
+    <div class="search-bar">
+      <input type="text" placeholder="Rechercher un produit..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+    </div>
+
+    <label for="menu-toggle" class="hamburger">☰</label>
   </div>
+
+  <input type="checkbox" id="menu-toggle" class="menu-cb">
+
+  <nav class="nav-menu">
+    <ul class="nav-list">
+      <li><a href="{{ url_for('auth.index') }}" class="nav-item">
+        <img src="{{ url_for('static', filename='profils/home.png') }}" class="nav-icon"> Accueil
+      </a></li>
+      <li><a href="{{ url_for('notification.notifications') }}" class="nav-item">
+        <img src="{{ url_for('static', filename='profils/notification.png') }}" class="nav-icon"> Notifications
+      </a></li>
+      <li><a href="{{ url_for('panier.panier') }}" class="nav-item">
+        <img src="{{ url_for('static', filename='profils/panier.png') }}" class="nav-icon"> Panier
+      </a></li>
+      <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
+        <div class="profile" style="width:30px; height:30px;">
+          {% if user and user.get('profil') %}
+            <img src="{{ user['profil'] }}" class="profil-img" style="width:100%; border-radius:50%;">
+          {% else %}
+            <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" style="width:100%; border-radius:50%;">
+          {% endif %}
+        </div> Profil
+      </a></li>
+    </ul>
+  </nav>
 </header>
 
 <main>

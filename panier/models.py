@@ -54,4 +54,59 @@ class Panier():
         cursor.close()
         conn.close()
         return cart_items, total
+
+    @classmethod
+    def clear_panier(cls, user_id):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM panier WHERE buyer_id = %s", (user_id,))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+class Commande:
+    @classmethod
+    def create(cls, data_list):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            query = """
+                INSERT INTO commande (
+                    panier_id, buyer_id, buyer_first_name, buyer_last_name, adresse, 
+                    product_id, product_name, product_price, product_description, 
+                    product_image_url, seller_id, seller_name, quantite, prix_total, 
+                    date_reception, date_livraison, heure_livraison, frais_livraison, 
+                    etat, payment_intent_id
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """
+            cursor.executemany(query, data_list)
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+    @classmethod
+    def update_status(cls, reference_id, status):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE commande SET etat = %s WHERE payment_intent_id = %s", (status, reference_id))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+    @classmethod
+    def check_status(cls, payment_intent_id):
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT etat FROM commande WHERE payment_intent_id = %s LIMIT 1", (payment_intent_id,))
+            return cursor.fetchone()
+        finally:
+            cursor.close()
+            conn.close()
     

@@ -3,17 +3,23 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
 import mysql.connector.pooling
-from config import Config
+# from config import Config # Ne pas importer Config directement au niveau du module
 
 # Initialisation du pool de connexions (une seule fois pour toute l'app)
-db_pool = mysql.connector.pooling.MySQLConnectionPool(
-    pool_name="elikya_pool",
-    pool_size=1,
-    host=Config.MYSQL_HOST,
-    user=Config.MYSQL_USER,
-    password=Config.MYSQL_PASSWORD,
-    database=Config.MYSQL_DB
-)
+db_pool = None # Initialiser db_pool à None
+
+def init_db_pool(app_config_dict):
+    """Initialise le pool de connexions à la base de données."""
+    global db_pool
+    if db_pool is None: # S'assurer qu'il n'est initialisé qu'une seule fois
+        db_pool = mysql.connector.pooling.MySQLConnectionPool(
+            pool_name="elikya_pool",
+            pool_size=1,
+            host=app_config_dict['MYSQL_HOST'],
+            user=app_config_dict['MYSQL_USER'],
+            password=app_config_dict['MYSQL_PASSWORD'],
+            database=app_config_dict['MYSQL_DB']
+        )
 
 def get_db_connection():
     """Fonction unique pour récupérer une connexion du pool"""

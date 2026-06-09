@@ -1,6 +1,7 @@
 from flask import Flask
 from config import Config
-from ext import bcrypt, login_manager, mail, csrf
+from ext import bcrypt, login_manager, mail, csrf, init_db_pool # Importer init_db_pool
+from ext import get_db_connection # S'assurer que get_db_connection est importé si utilisé ailleurs
 from auth.routes import auth_bp
 from auth.models import User
 from profils.routes import buyer_bp, seller_bp
@@ -13,7 +14,9 @@ from notifications.routes import notifications_bp
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
-
+    
+        # Initialiser le pool de base de données APRÈS que la configuration de l'application soit chargée
+    init_db_pool(app.config)
     # Initialisation des extensions avec l'application Flask
     bcrypt.init_app(app)
     csrf.init_app(app)
