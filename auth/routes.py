@@ -16,7 +16,7 @@ def generer_code_verification(longueur=6):
 def racine():
     if current_user.is_authenticated:
         return redirect(url_for('auth.index'))
-    return redirect(url_for('auth.inscription'))
+    return redirect(url_for('auth.connexion'))
 
 @auth_bp.route('/inscription', methods=['GET', 'POST'])
 def inscription():
