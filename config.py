@@ -34,3 +34,6 @@ class Config:
     
     # 5. Un mode "Bac à sable" (Sandbox) pour faire de faux paiements pendant le développement.
     SHWARY_SANDBOX = os.getenv("SHWARY_SANDBOX", "true").lower() in ("1", "true", "yes")
+
+    # Dossier d'upload (Chemin absolu pour la prod)
+    UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'static', 'uploads')

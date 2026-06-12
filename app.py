@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 from config import Config
 from ext import bcrypt, login_manager, mail, csrf, init_db_pool # Importer init_db_pool
@@ -22,6 +23,10 @@ def create_app():
     csrf.init_app(app)
     mail.init_app(app)
     login_manager.init_app(app)
+
+    # S'assurer que le dossier d'upload existe en production
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
     # Enregistrement du Blueprint d'authentification
     app.register_blueprint(auth_bp)
