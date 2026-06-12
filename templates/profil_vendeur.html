@@ -63,9 +63,10 @@
     <img src="{{ user.profil }}" alt="Profil Acheteur">
     <div class="shop-info">
       <h2 class="username"> {{ user.nom_boutique or 'Boutique sans nom' }}</h2>
-      <p>{{ user.description or 'Aucune description disponible.' }}</p>
-      <a href="" class="subscribe-btn">mes notifications</a>
+      <p>{{ user.description or 'Aucune description disponible.' }}</p> <br>
+      <a href="{{url_for('produit.ajouter_produit')}}" class="subscribe-btn">ajouter un produit</a>
     </div>
+    
   </div>
 
   <h2>Produits</h2>

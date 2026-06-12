@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajouter un produit</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='ajouter_produit.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+<header>
+  <div class="header-top">
+    <div class="logo-container {{ 'active-home' if request.endpoint == 'auth.index' }}">
+      <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
+    </div>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Rechercher un produit..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+    </div>
+
+    <label for="menu-toggle" class="hamburger">☰</label>
+  </div>
+
+  <input type="checkbox" id="menu-toggle" class="menu-cb">
+
+  <nav class="nav-menu">
+    <ul class="nav-list">
+      <li><a href="{{ url_for('auth.index') }}" class="nav-item">
+        <i class="fa-solid fa-house nav-icon"></i> Accueil
+      </a></li>
+      <li><a href="{{ url_for('notification.notifications') }}" class="nav-item">
+        <i class="fa-solid fa-bell nav-icon"></i> Notifications
+      </a></li>
+      <li><a href="{{ url_for('panier.panier') }}" class="nav-item">
+        <i class="fa-solid fa-cart-shopping nav-icon"></i> Panier
+      </a></li>
+      <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
+        <div class="profile" style="width:30px; height:30px;">
+          {% if user and user.get('profil') %}
+            <img src="{{ user['profil'] }}" class="profil-img" style="width:100%; border-radius:50%;">
+          {% else %}
+            <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" style="width:100%; border-radius:50%;">
+          {% endif %}
+        </div> Profil
+      </a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  <div >
+        <form action="{{ url_for('produit.ajouter_produit') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="shop-info">
+                <div class="photo-container">
+                    <img src="" class="shop-photo" id="preview-image">
+                    <input type="file" id="photo-upload" name="image_url" style="display:none;">
+                    <label for="photo-upload" class="edit-icon">
+                        <i class="fa-solid fa-pen"></i>
+                    </label>
+                    <input type="file" id="photo-upload" style="display:none;">
+                </div>
+                <label for="nom_produit">Nom du produit :</label>
+                <input type="text" id="nom_produit" name="nom_produit" required><br><br>
+                <label for="prix">Prix (Uniquement le nombre en Dollars) :</label>
+                <input type="number" id="prix" name="prix" required><br><br>
+                <label for="description">Description :</label><br>
+                <textarea id="description" name="description" rows="4" cols="50" required></textarea><br><br>
+                <button class="subscribe-btn">Valider</button>
+            </div>
+        </form>
+  </div>
+</body>
+<script>
+  const inputFile = document.getElementById("photo-upload");
+  const imgPreview = document.getElementById("preview-image");
+
+  inputFile.addEventListener("change", () => {
+    const file = inputFile.files[0];
+    if (file) {
+      imgPreview.src = URL.createObjectURL(file);
+      imgPreview.onload = () => URL.revokeObjectURL(imgPreview.src);
+    }
+  });
+</script>
+</html>

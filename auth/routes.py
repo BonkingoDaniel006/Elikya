@@ -114,7 +114,7 @@ def connexion():
 @auth_bp.route('/index')
 @login_required
 def index():
-    produits = Produits.get_by_id()
+    produits = Produits.get_all()
     claims = current_user.get_claims()
     
     return render_template(

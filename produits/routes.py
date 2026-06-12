@@ -3,6 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from ext import bcrypt, mail, get_db_connection
 from produits.models import Add_panier
 from produits.models import Details_produit
+from produits.models import Ajouter_produit
 
 
 produit_bp = Blueprint('produit', __name__)
@@ -63,3 +64,38 @@ def add_panier(product_id):
     
     flash(f"{produit.name} ajouté au panier !", "success")
     return redirect(url_for('produit.detail_produit', product_id=product_id))
+
+
+@produit_bp.route("/ajouter_produit", methods=["GET", "POST"])
+@login_required
+def ajouter_produit():
+    # user_info est déjà garanti par @login_required
+    user_info = current_user.get_claims()
+
+    if request.method == "GET":
+        return render_template("ajouter_produit.html", user=user_info)
+
+    # Récupération des données du formulaire
+    name = request.form.get("nom_produit")
+    price = request.form.get("prix")
+    description = request.form.get("description")
+    # On récupère le FICHIER et non le texte
+    image_file = request.files.get("image_url")
+    seller_id = user_info.get("id")
+
+    result = Ajouter_produit.ajouter(
+        id=None, 
+        seller_id=seller_id, 
+        name=name, 
+        price=price, 
+        description=description, 
+        image_url=image_file)
+
+    # Vérification si le modèle a renvoyé une erreur (ex: format non autorisé)
+    if isinstance(result, tuple) and len(result) == 2:
+        flash(result[0], "danger")
+        return redirect(url_for('produit.ajouter_produit'))
+
+    flash("Produit ajouté avec succès !", "success")
+    return redirect(url_for('seller.seller_dashboard'))
+    

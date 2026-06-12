@@ -140,19 +140,24 @@ header {
     }
 
     .subscribe-btn {
-      background: linear-gradient(to right, #c8b6ff, #ffdde1);
+      margin-top: 30px;
+      background: #ff4081;
+      color: white;
       border: none;
-      color: #333;
-      padding: 10px 25px;
+      padding: 15px;
       border-radius: 30px;
+      width: 100%;
+      font-size: 16px;
       font-weight: bold;
       cursor: pointer;
       transition: 0.3s;
-    }
+    } 
 
-    .subscribe-btn:hover {
-      background: linear-gradient(to right, #ffdde1, #c8b6ff);
-    }
+    .subscribe-btn:hover { background: #e73370; }
+
+
+  
+
 
     /* ===== Grille Produits ===== */
     .product-grid {
