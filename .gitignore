@@ -14,4 +14,4 @@ instance/
 site-pour-vente-de-fleur/
 
 # Fichiers uploadés par les utilisateurs
-static/uploads/
+static/uploads/__pycache__/
