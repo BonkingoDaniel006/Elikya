@@ -1,5 +1,6 @@
 from ext import get_db_connection
-
+import os
+import uuid
 
 
 class Details_produit():
@@ -105,6 +106,50 @@ class Add_panier():
                 product_id, product_name, product_price, product_description, product_image_url,
                 seller_id, seller_name, quantite, prix_total
             ))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+class Ajouter_produit():
+    def __init__(self, id, seller_id, name, price, description, image_url):
+        self.id = id
+        self.seller_id = seller_id
+        self.name = name
+        self.price = price
+        self.description = description
+        self.image_url = image_url
+
+    def get_claims(self):
+        return {
+            "id": self.id,
+            "seller_id": self.seller_id,
+            "name": self.name,
+            "price": self.price,
+            "description": self.description,
+            "image_url": self.image_url
+        }
+    @classmethod
+    def ajouter(cls, id, seller_id, name, price, description, image_url):
+        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        final_image_path = None
+        
+        if image_url and image_url.filename != "":
+            extension = image_url.filename.rsplit('.', 1)[-1].lower()
+            if '.' in image_url.filename and extension in ALLOWED_EXTENSIONS:
+                unique_filename = str(uuid.uuid4()) + "." + extension
+                image_path = os.path.join("static/uploads", unique_filename)
+                image_url.save(image_path)
+                final_image_path = "/" + image_path.replace("\\", "/")
+            else:
+                return "Format de fichier non autorisé", 400
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO produits (id, seller_id, name, price, description, image_url)
+                VALUES (%s, %s, %s, %s, %s, %s)""", (id, seller_id, name, price, description, final_image_path))
             conn.commit()
         finally:
             cursor.close()

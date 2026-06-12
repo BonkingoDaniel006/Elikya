@@ -11,7 +11,7 @@ class Produits():
         self.image_url = image_url
 
     @classmethod
-    def get_by_id(cls):
+    def get_all(cls):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("""
