@@ -55,27 +55,34 @@ class Details_produit:
     @classmethod
     def get_by_id(cls, product_id):
         conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("""
-            SELECT p.*, u.nom_boutique as seller_name 
-            FROM products p 
-            JOIN users u ON p.seller_id = u.id 
-            WHERE p.id = %s
-        """, (product_id,))
-        res = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        return SimpleNamespace(**res) if res else None
+        cursor = conn.cursor(dictionary=True, buffered=True)
+        try:
+            cursor.execute("""
+                SELECT p.*, u.nom_boutique as seller_name 
+                FROM products p 
+                JOIN users u ON p.seller_id = u.id 
+                WHERE p.id = %s
+            """, (product_id,))
+            res = cursor.fetchone()
+            return SimpleNamespace(**res) if res else None
+        except Exception as e:
+            print(f"Erreur lors de la récupération du produit: {e}")
+            return None
+        finally:
+            cursor.close()
+            conn.close()
 
 class Add_panier:
     @classmethod
     def create(cls, **kwargs):
         conn = get_db_connection()
         cursor = conn.cursor()
-        cols = ", ".join(kwargs.keys())
-        vals = [kwargs[k] for k in kwargs]
-        placeholders = ", ".join(["%s"] * len(vals))
-        cursor.execute(f"INSERT INTO panier2 ({cols}) VALUES ({placeholders})", vals)
-        conn.commit()
-        cursor.close()
-        conn.close()
+        try:
+            cols = ", ".join(kwargs.keys())
+            vals = [kwargs[k] for k in kwargs]
+            placeholders = ", ".join(["%s"] * len(vals))
+            cursor.execute(f"INSERT INTO panier2 ({cols}) VALUES ({placeholders})", vals)
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
