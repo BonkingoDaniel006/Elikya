@@ -1,6 +1,7 @@
 from ext import get_db_connection
 import os
 import uuid
+from werkzeug.datastructures import FileStorage
 
 
 class Details_produit():
@@ -130,7 +131,7 @@ class Ajouter_produit():
             "image_url": self.image_url
         }
     @classmethod
-    def ajouter(cls, id, seller_id, name, price, description, image_url):
+    def ajouter(cls, id, seller_id, name, price, description, image_url: FileStorage):
         ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
         final_image_path = None
         
