@@ -19,7 +19,7 @@
     <p><strong>Ne fermez pas cette page.</strong> Elle s'actualisera automatiquement dès confirmation.</p>
     <div id="error-box" style="color: red; display: none; margin-top: 20px;">
       Le paiement a échoué. Veuillez réessayer. <br>
-      <a href="{{ url_for('paiement') }}">Retour au panier</a>
+      <a href="{{ url_for('panier.panier') }}">Retour au panier</a>
     </div>
   </div>
 
@@ -34,7 +34,7 @@
           
           if (data.status === "True") {
             // SUCCÈS : On redirige vers la page de confirmation finale
-            window.location.href = "{{ url_for('paiement_finalise') }}";
+            window.location.href = "{{ url_for('panier.paiement_finalise') }}";
           } else if (data.status === "Echoué") {
             // ÉCHEC : On arrête le polling et on montre l'erreur
             document.querySelector('.loader').style.display = 'none';
