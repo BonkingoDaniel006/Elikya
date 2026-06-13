@@ -72,17 +72,14 @@ class Commande:
         conn = get_db_connection()
         cursor = conn.cursor()
         try:
-            query = """
+            cursor.executemany("""
                 INSERT INTO commande (
-                    panier_id, buyer_id, buyer_first_name, buyer_last_name, adresse, 
-                    product_id, product_name, product_price, product_description, 
-                    product_image_url, seller_id, seller_name, quantite, prix_total, 
-                    date_reception, date_livraison, heure_livraison, frais_livraison, 
-                    etat, payment_intent_id
-                )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.executemany(query, data_list)
+                    panier_id, buyer_id, buyer_first_name, buyer_last_name, adresse,
+                    product_id, product_name, product_price, product_description, product_image_url,
+                    seller_id, seller_name, quantite, prix_total, date_reception, date_livraison,
+                    heure_livraison, frais_livraison, etat, payment_intent_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            """, data_list)
             conn.commit()
         finally:
             cursor.close()
@@ -98,15 +95,3 @@ class Commande:
         finally:
             cursor.close()
             conn.close()
-
-    @classmethod
-    def check_status(cls, payment_intent_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        try:
-            cursor.execute("SELECT etat FROM commande WHERE payment_intent_id = %s LIMIT 1", (payment_intent_id,))
-            return cursor.fetchone()
-        finally:
-            cursor.close()
-            conn.close()
-    

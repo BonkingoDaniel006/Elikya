@@ -1,178 +1,134 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
-from flask_login import login_user, logout_user, login_required, current_user
-from ext import bcrypt, mail, csrf, get_db_connection
+from flask_login import login_required, current_user
+from ext import csrf, get_db_connection
 from panier.models import Panier, Commande
-from profils.models import Buyer
 from payment_service import create_payment
 import uuid
-import stripe
 from datetime import datetime, timedelta
-import os
+from security import validate_phone_drc, normalize_phone_drc
+from config import Config
 
 panier_bp = Blueprint('panier', __name__)
 
-@panier_bp.route("/panier")
+# --- ROUTES D'AFFICHAGE ---
+
+@panier_bp.route("/panier", methods=["GET", "POST"])
 @login_required
 def panier():
+    """Étape 1 : Affichage du panier et choix de la méthode."""
+    if request.method == "POST":
+        method = request.form.get("payment")
+        if method in ["orange-money", "airtel-money", "mpesa"]:
+            return redirect(url_for('panier.mobile_money', method=method))
+        
+        flash("Cette méthode de paiement n'est pas encore disponible.", "warning")
+        return redirect(url_for('panier.panier'))
+
     cart_items, total = Panier.get_panier(current_user.id)
-    user_info = current_user.get_claims()
+    user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
     return render_template("paiement.html", user=user_info, cart_items=cart_items, cart_total=total)
-
-@panier_bp.route("/process_payment", methods=["POST"])
-@login_required
-def process_payment():
-    payment_method = request.form.get("payment")
-    user_id = current_user.id
-
-    if payment_method in ["orange-money", "airtel-money", "mpesa"]:
-        return redirect(url_for("panier.mobile_money", method=payment_method))
-    
-    if payment_method == "card":
-        stripe.api_key = os.getenv("cle_secrete")
-        cart_items, total = Panier.get_panier(user_id)
-        if not cart_items:
-            flash("Votre panier est vide.", "warning")
-            return redirect(url_for('panier.panier'))
-
-        line_items = []
-        for item in cart_items:
-            line_items.append({
-                'price_data': {
-                    'currency': 'usd',
-                    'product_data': {'name': item['product_name']},
-                    'unit_amount': int(float(item['product_price']) * 100),
-                },
-                'quantity': item['quantite'],
-            })
-
-        try:
-            checkout_session = stripe.checkout.Session.create(
-                line_items=line_items,
-                mode='payment',
-                success_url=url_for('panier.success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
-                cancel_url=url_for('panier.cancel', _external=True),
-                metadata={'buyer_id': str(user_id)}
-            )
-            return redirect(checkout_session.url, code=303)
-        except Exception as e:
-            flash(f"Erreur Stripe: {str(e)}", "danger")
-            return redirect(url_for('panier.panier'))
-
-    return f"<h1>Paiement via {payment_method}</h1><p>L'API pour ce moyen de paiement sera intégrée ici.</p>"
 
 @panier_bp.route("/mobile_money")
 @login_required
 def mobile_money():
-    method = request.args.get('method', 'Mobile Money')
-    user_info = current_user.get_claims()
+    """Étape 2 : Formulaire de saisie du numéro de téléphone."""
+    method = request.args.get('method', 'mobile-money')
+    user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
     return render_template("mobile_money.html", method=method, user=user_info)
 
 @panier_bp.route("/initiate_mobile_payment", methods=["POST"])
 @login_required
 def initiate_mobile_payment():
-    user_id = current_user.id
+    """Étape 3 : Création de la commande 'en_attente' et envoi du Push USSD."""
     phone = request.form.get("phone")
-    payment_intent_id = str(uuid.uuid4())
+    if not validate_phone_drc(phone):
+        flash("Numéro de téléphone invalide (Format attendu: +243...).", "danger")
+        return redirect(url_for('panier.mobile_money'))
+
+    normalized_phone = normalize_phone_drc(phone)
+    cart_items, total = Panier.get_panier(current_user.id)
     
-    cart_items, total_amount = Panier.get_panier(user_id)
     if not cart_items:
         flash("Votre panier est vide.", "warning")
         return redirect(url_for('panier.panier'))
 
-    buyer = Buyer.get_by_id(user_id)
-    adresse = buyer.adresse if buyer else "Non spécifiée"
-    
-    date_reception = (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d')
-    date_livraison = (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d')
-    
-    commande_data = []
+    reference_id = str(uuid.uuid4())
+    user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
+
+    # Préparation des entrées pour la table commande
+    order_entries = []
     for item in cart_items:
-        commande_data.append((
-            item['id'], user_id, buyer.prenom, buyer.nom, adresse,
-            item['product_id'], item['product_name'], item['product_price'],
-            item['product_description'], item['product_image_url'],
-            item['seller_id'], item['seller_name'], item['quantite'],
-            item['prix_total'], date_reception, date_livraison, "16:00", 2.5,
-            "En attente", payment_intent_id
+        order_entries.append((
+            item.get('id'), current_user.id, user_info.get('prenom'), user_info.get('nom'),
+            user_info.get('adresse', 'Kinshasa, RDC'), item.get('product_id'), item.get('product_name'),
+            item.get('product_price'), item.get('product_description'), item.get('product_image_url'),
+            item.get('seller_id'), item.get('seller_name'), item.get('quantite'), item.get('prix_total'),
+            (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
+            (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d'),
+            "16:00", 2.5, "en_attente", reference_id
         ))
 
     try:
-        res = create_payment(phone, total_amount, reference_id=payment_intent_id)
-        if "error" not in res and res.get("status") != "failed":
-            Commande.create(commande_data)
-            return render_template('attente_paiement.html', reference_id=payment_intent_id, method=request.form.get("method", "Mobile Money"))
+        Commande.create(order_entries)
+        # Appel Shwary pour déclencher le popup sur le téléphone
+        res = create_payment(normalized_phone, total, reference_id=reference_id)
+
+        if res.get("status") == "success" or "id" in res:
+            # Redirection vers la page d'attente qui va poll l'API
+            return render_template('attente_paiement.html', reference_id=reference_id)
         else:
-            flash(f"Erreur Shwary: {res.get('error', 'Échec de l\'initiation')}", "danger")
+            flash(f"Erreur Shwary : {res.get('error', 'Échec de l\'opération')}", "danger")
+            return redirect(url_for('panier.panier'))
     except Exception as e:
-        flash(f"Erreur de connexion: {str(e)}", "danger")
-    
-    return redirect(url_for('panier.panier'))
-
-@panier_bp.route('/api/callback', methods=['POST'])
-@csrf.exempt
-def shwary_callback():
-    data = request.get_json(silent=True)
-    if not data or str(data.get("userId")) != str(current_app.config['SHWARY_MERCHANT_ID']):
-        return jsonify({"error": "Unauthorized"}), 401
-
-    reference_id = data.get("referenceId") or data.get("referenceID")
-    status = data.get("status")
-    amount_received = data.get("amount")
-
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute("SELECT SUM(CAST(prix_total AS DECIMAL(10,2))) as total, buyer_id FROM commande WHERE payment_intent_id = %s", (reference_id,))
-        order_data = cursor.fetchone()
-
-        if not order_data or not order_data['total']:
-            return jsonify({"error": "Order not found"}), 404
-
-        if status == "success" and round(float(amount_received), 2) >= round(float(order_data['total']), 2):
-            Commande.update_status(reference_id, "True")
-            Panier.clear_panier(order_data['buyer_id'])
-            return jsonify({"status": "updated"}), 200
-        else:
-            Commande.update_status(reference_id, "Echoué")
-            return jsonify({"status": "failed"}), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
+        current_app.logger.error(f"Erreur paiement : {e}")
+        flash("Une erreur technique est survenue.", "danger")
+        return redirect(url_for('panier.panier'))
 
 @panier_bp.route("/api/check_status/<payment_intent_id>")
 @login_required
 def check_status(payment_intent_id):
-    status_data = Commande.check_status(payment_intent_id)
-    if status_data:
-        return jsonify({"status": status_data['etat']})
+    """Route pour le polling JS : vérifie si le statut est passé à 'True'."""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT etat FROM commande WHERE payment_intent_id = %s LIMIT 1", (payment_intent_id,))
+    order = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    
+    if order:
+        return jsonify({"status": order['etat']})
     return jsonify({"status": "not_found"}), 404
 
 @panier_bp.route("/paiement_finalise")
 @login_required
 def paiement_finalise():
-    user_info = current_user.get_claims()
+    """Étape 4 : Affichage de la page de confirmation finale."""
+    user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
     return render_template('paiement confirmé.html', user=user_info)
 
-@panier_bp.route('/success')
-@login_required
-def success():
-    session_id = request.args.get('session_id')
-    if session_id:
-        stripe.api_key = os.getenv("cle_secrete")
-        try:
-            checkout_session = stripe.checkout.Session.retrieve(session_id)
-            if checkout_session.payment_status == 'paid':
-                buyer_id = checkout_session.metadata.get('buyer_id')
-                if buyer_id:
-                    Panier.clear_panier(buyer_id)
-        except Exception:
-            pass
-    user_info = current_user.get_claims()
-    return render_template('paiement confirmé.html', user=user_info)
+@panier_bp.route('/api/callback', methods=['POST'])
+@csrf.exempt
+def shwary_callback():
+    """Webhook Shwary : met à jour la commande et vide le panier si succès."""
+    data = request.get_json(silent=True)
+    if not data or str(data.get("userId")) != str(Config.SHWARY_MERCHANT_ID):
+        return jsonify({"error": "Unauthorized"}), 401
 
-@panier_bp.route('/cancel')
-def cancel():
-    flash("Le paiement a été annulé.", "info")
-    return redirect(url_for('panier.panier'))
+    reference_id = data.get("referenceId")
+    status = data.get("status")
+
+    if status == "success":
+        # Mise à jour de la commande et nettoyage du panier de l'acheteur
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT buyer_id FROM commande WHERE payment_intent_id = %s LIMIT 1", (reference_id,))
+        order = cursor.fetchone()
+        if order:
+            Panier.clear_panier(order['buyer_id'])
+            Commande.update_status(reference_id, "True") # 'True' est attendu par ton JS
+        cursor.close()
+        conn.close()
+    else:
+        Commande.update_status(reference_id, "Echoué")
+
+    return jsonify({"status": "updated"}), 200

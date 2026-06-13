@@ -71,7 +71,7 @@
         <span>{{ cart_total }} $</span>
       </div>
 
-      <form method="POST" action="{{ url_for('panier.panier') }}">
+      <form method="POST" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="mod-btn" type="submit">modifier le panier</button>
       </form>
@@ -80,7 +80,7 @@
 
   <div class="checkout-section">
     <h2>Méthode de paiement</h2>
-    <form id="payment-form" method="POST" action="{{ url_for('panier.process_payment') }}">
+    <form id="payment-form" method="POST" action="">
       <div class="payment-methods">
         <label>
           <input type="radio" name="payment" value="orange-money" required>
