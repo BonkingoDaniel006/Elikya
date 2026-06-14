@@ -72,7 +72,12 @@
   <h2>Produits</h2>
   <div class="product-grid">
     {% for p in produits %}
-    <div class="product-card" onclick="window.location.href='{{ url_for('produit.detail_produit', product_id=p['id']) }}'">
+    <div class="product-card" 
+         data-id="{{ p.id }}" 
+         data-name="{{ p.name }}" 
+         data-price="{{ p.price }}" 
+         data-description="{{ p.description }}"
+         onclick="window.location.href='{{ url_for('produit.detail_produit', product_id=p['id']) }}'">
       <div class="product-options" onclick="event.stopPropagation();">
         <button class="options-btn">
           <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -126,18 +131,52 @@
       </div>
   </div>
 
-  
+  <!-- Modale de modification (Style DA Elikya) -->
+  <div id="updateProductModal" class="modal-overlay">
+      <div class="modal-box">
+          <h3 style="color: #4b0082; margin-top: 0;">Modifier l'article</h3>
+          <form id="updateForm" method="POST" enctype="multipart/form-data" style="margin-top:20px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              
+              <div id="updateInfoStep">
+                  <input type="text" name="nom_produit" id="updateName" placeholder="Nom du produit" class="modal-input" required>
+                  <input type="number" step="0.01" name="prix" id="updatePrice" placeholder="Prix ($)" class="modal-input" required>
+                  <textarea name="description" id="updateDesc" placeholder="Description" class="modal-input" style="height: 100px; resize: none;" required></textarea>
+                  <label style="display: block; text-align: left; margin-left: 10px; font-size: 0.8rem; color: #666;">Changer l'image (optionnel) :</label>
+                  <input type="file" name="image_url" id="updateImage" class="modal-input">
+              </div>
+
+              <div id="updatePasswordStep" style="display:none;">
+                  <p id="updateModalText" style="color: #666; font-size: 0.9rem;">Sécurité : Veuillez confirmer votre identité pour enregistrer les modifications.</p>
+                  <input type="password" name="password" id="updatePassword" placeholder="Entrez votre mot de passe" class="modal-input" required>
+              </div>
+
+              <div class="modal-actions">
+                  <button type="button" onclick="closeUpdateModal()" class="btn-modal btn-modal-cancel">Annuler</button>
+                  <button type="button" id="updateConfirmBtn" class="btn-modal btn-modal-confirm">
+                      Suivant
+                  </button>
+              </div>
+          </form>
+      </div>
+  </div>
 
 
 </main>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // 1. On vérifie si l'URL contient le paramètre confirm_delete envoyé par le back-end
     const urlParams = new URLSearchParams(window.location.search);
+    
+    // Gestion de la suppression
     const productId = urlParams.get('confirm_delete');
-
     if (productId) {
         showModal(productId);
+    }
+
+    // Gestion de la modification
+    const updateId = urlParams.get('update_product');
+    if (updateId) {
+        showUpdateModal(updateId);
     }
 });
 
@@ -188,6 +227,61 @@ function nextStep() {
 function closeModal() {
     document.getElementById('deleteConfirmModal').style.display = 'none';
     // On nettoie l'URL (on retire le confirm_delete)
+    window.location.href = "{{ url_for('seller.seller_dashboard') }}";
+}
+
+function showUpdateModal(id) {
+    currentProductId = id;
+    const modal = document.getElementById('updateProductModal');
+    const infoStep = document.getElementById('updateInfoStep');
+    const passwordStep = document.getElementById('updatePasswordStep');
+    const confirmBtn = document.getElementById('updateConfirmBtn');
+
+    // Récupération des données depuis la carte produit
+    const card = document.querySelector(`.product-card[data-id="${id}"]`);
+    if (card) {
+        document.getElementById('updateName').value = card.dataset.name;
+        document.getElementById('updatePrice').value = card.dataset.price;
+        document.getElementById('updateDesc').value = card.dataset.description;
+    }
+
+    modal.style.display = 'block';
+    
+    // Réinitialisation de la modale
+    infoStep.style.display = 'block';
+    passwordStep.style.display = 'none';
+    
+    confirmBtn.innerText = "Suivant";
+    confirmBtn.type = "button";
+    
+    confirmBtn.onclick = function(e) {
+        if (passwordStep.style.display === 'none') {
+            nextUpdateStep();
+        }
+    };
+
+    document.getElementById('updateForm').action = "{{ url_for('produit.modifier_produit', product_id=0) }}".replace('0', id);
+}
+
+function nextUpdateStep() {
+    const infoStep = document.getElementById('updateInfoStep');
+    const passwordStep = document.getElementById('updatePasswordStep');
+    const confirmBtn = document.getElementById('updateConfirmBtn');
+    const passwordInput = document.getElementById('updatePassword');
+
+    // Étape 2 : Cacher les infos et demander le mot de passe
+    infoStep.style.display = 'none';
+    passwordStep.style.display = 'block';
+    
+    setTimeout(() => passwordInput.focus(), 100);
+    
+    confirmBtn.innerText = "Valider les modifications";
+    confirmBtn.type = "submit";
+    confirmBtn.onclick = null;
+}
+
+function closeUpdateModal() {
+    document.getElementById('updateProductModal').style.display = 'none';
     window.location.href = "{{ url_for('seller.seller_dashboard') }}";
 }
 </script>

@@ -157,13 +157,27 @@ def modifier_produit(product_id):
     name = request.form.get("nom_produit")
     price = request.form.get("prix")
     description = request.form.get("description")
+    image_file = request.files.get("image_url")  # Récupération du fichier image
     password = request.form.get("password")
     
     user_db = User.get_by_id(current_user.id)
 
     if password and bcrypt.check_password_hash(user_db.password, password):
         # On passe les nouvelles données au modèle
-        Modifier_produit.modifier(product_id, name=name, price=price, description=description)
+        result = Modifier_produit.modifier(
+            id=product_id, 
+            seller_id=user_info.get("id"), 
+            name=name, 
+            price=price, 
+            description=description, 
+            image_url=image_file
+        )
+
+        # Vérification si le modèle a renvoyé une erreur de format de fichier
+        if isinstance(result, tuple) and len(result) == 2:
+            flash(result[0], "danger")
+            return redirect(url_for('seller.seller_dashboard'))
+
         flash("Le produit a été modifié avec succès.", "success")
     else:
         flash("Mot de passe incorrect. Modification annulée.", "danger")
