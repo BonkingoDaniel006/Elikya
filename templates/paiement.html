@@ -6,6 +6,7 @@
 <title>Checkout - e-MiniShopRDC</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='paiement.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='fil_actu.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='profil_vendeur.css') }}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
@@ -62,7 +63,19 @@
             <span>Quantité: {{ item.quantite }}</span>
             <span>Prix unitaire: {{ item.product_price }} $</span>
           </div>
-          <div class="price">Total: {{ item.prix_total }} $</div>
+          <div class="price" style="display: flex; justify-content: space-between; align-items: center;">
+            <span>Total: {{ item.prix_total }} $</span>
+            <div class="cart-item-actions">
+              <button type="button" class="btn-cart-action btn-cart-modify" 
+                      onclick="openEditCartModal('{{ item.id }}', '{{ item.product_name }}', '{{ item.quantite }}')">
+                  <i class="fa-solid fa-pen-to-square"></i>
+              </button>
+              <button type="button" class="btn-cart-action btn-cart-delete" 
+                      onclick="openDeleteCartModal('{{ item.id }}', '{{ item.product_name }}')">
+                  <i class="fa-solid fa-trash"></i>
+              </button>
+            </div>
+          </div>
         </div>
       {% endfor %}
 
@@ -70,12 +83,6 @@
         <span>Total</span>
         <span>{{ cart_total }} $</span>
       </div>
-
-      <form method="POST" action="">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="mod-btn" type="submit">modifier le panier</button>
-      </form>
-
   </div>
 
   <div class="checkout-section">
@@ -117,5 +124,66 @@
   </div>
 
 </main>
+
+<!-- Modale de Modification de Quantité -->
+<div id="editCartModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 style="color: #4b0082; margin-top: 0;">Modifier la quantité</h3>
+        <p id="editItemName" style="font-weight: 600; margin-bottom: 15px; color: #333;"></p>
+        <form id="editCartForm" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="number" name="quantite" id="editItemQty" class="modal-input" min="1" required>
+            <div class="modal-actions">
+                <button type="button" onclick="closeEditModal()" class="btn-modal btn-modal-cancel">Annuler</button>
+                <button type="submit" class="btn-modal btn-modal-confirm">Valider</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modale de Confirmation de Suppression -->
+<div id="deleteCartModal" class="modal-overlay">
+    <div class="modal-box">
+        <h3 style="color: #4b0082; margin-top: 0;">Retirer l'article</h3>
+        <p id="deleteModalText" style="color: #666; line-height: 1.5;"></p>
+        <form id="deleteCartForm" method="POST" style="margin-top: 20px;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="modal-actions">
+                <button type="button" onclick="closeDeleteCartModal()" class="btn-modal btn-modal-cancel">Non</button>
+                <button type="submit" class="btn-modal btn-modal-confirm">Oui, retirer</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditCartModal(id, name, qty) {
+    document.getElementById('editItemName').innerText = name;
+    document.getElementById('editItemQty').value = qty;
+    document.getElementById('editCartForm').action = "/modifier_article/" + id;
+    document.getElementById('editCartModal').style.display = 'block';
+}
+
+function closeEditModal() { 
+    document.getElementById('editCartModal').style.display = 'none'; 
+}
+
+function openDeleteCartModal(id, name) {
+    document.getElementById('deleteModalText').innerText = "Voulez-vous retirer '" + name + "' du panier ?";
+    document.getElementById('deleteCartForm').action = "/supprimer_article/" + id;
+    document.getElementById('deleteCartModal').style.display = 'block';
+}
+
+function closeDeleteCartModal() { 
+    document.getElementById('deleteCartModal').style.display = 'none'; 
+}
+
+window.onclick = function(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        closeEditModal();
+        closeDeleteCartModal();
+    }
+}
+</script>
 </body>
 </html>

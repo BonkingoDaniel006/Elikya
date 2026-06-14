@@ -130,6 +130,39 @@
     color: #ff4081;
 }
 
+/* Styles spécifiques au Panier (Profil Acheteur) */
+.cart-item-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.btn-cart-action {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+}
+
+.btn-cart-modify {
+    color: #4b0082;
+}
+
+.btn-cart-delete {
+    color: #ff4081;
+}
+
+.btn-cart-action:hover {
+    transform: scale(1.2);
+}
+
+.cart-modal-item-info {
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
 /* Bouton Ajouter un produit / S'abonner */
 .subscribe-btn {
     display: inline-block;
