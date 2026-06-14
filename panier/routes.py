@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from ext import csrf, get_db_connection
-from panier.models import Panier, Commande
+from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
 from payment_service import create_payment
 import uuid
 from datetime import datetime, timedelta
@@ -132,3 +132,37 @@ def shwary_callback():
         Commande.update_status(reference_id, "Echoué")
 
     return jsonify({"status": "updated"}), 200
+
+@panier_bp.route("/modifier_article/<int:cart_id>", methods=["POST"])
+@login_required
+def modifier_article(cart_id):
+    """Met à jour la quantité et le prix total d'un article dans le panier."""
+    try:
+        quantite = int(request.form.get("quantite", 1))
+        if quantite <= 0:
+            return redirect(url_for('panier.supprimer_article', cart_id=cart_id))
+
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT product_price FROM panier WHERE id = %s", (cart_id,))
+        item = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if item:
+            prix_total = quantite * float(item['product_price'])
+            Modifier_panier.modifier(cart_id, quantite, prix_total)
+            flash("Panier mis à jour.", "success")
+    except Exception as e:
+        current_app.logger.error(f"Erreur modification panier: {e}")
+        flash("Impossible de modifier la quantité.", "danger")
+
+    return redirect(url_for('panier.panier'))
+
+@panier_bp.route("/supprimer_article/<int:cart_id>", methods=["POST"])
+@login_required
+def supprimer_article(cart_id):
+    """Supprime définitivement un article du panier."""
+    Suprimer_panier.supprimer(cart_id)
+    flash("Article retiré du panier.", "success")
+    return redirect(url_for('panier.panier'))

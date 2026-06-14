@@ -95,3 +95,101 @@ class Commande:
         finally:
             cursor.close()
             conn.close()
+
+
+
+class Suprimer_panier():
+    def __init__(self, id, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, product_price, product_description, product_image_url, seller_id, seller_name, quantite, prix_total):
+        self.id = id
+        self.buyer_id=buyer_id
+        self.buyer_last_name= buyer_last_name
+        self.buyer_first_name=buyer_first_name
+        self.product_id =product_id
+        self.product_name = product_name
+        self.product_price = product_price
+        self.product_description = product_description
+        self.product_image_url = product_image_url
+        self.seller_id = seller_id
+        self.seller_name = seller_name
+        self.quantite = quantite
+        self.prix_total = prix_total
+
+
+    def get_claims(self):
+        return{
+            "id": self.id,
+            "buyer_id": self.buyer_id,
+            "buyer_last_name": self.buyer_last_name,
+            "buyer_first_name": self.buyer_first_name,
+            "product_id": self.product_id,
+            "product_name": self.product_name,
+            "product_price": self.product_price,
+            "product_description": self.product_description,
+            "product_image_url": self.product_image_url,
+            "seller_id": self.seller_id,
+            "seller_name": self.seller_name,
+            "quantite": self.quantite,
+            "prix_total": self.prix_total
+        }
+    @classmethod
+    def supprimer(cls, id):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM panier WHERE id = %s", (id,))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+
+
+
+class Modifier_panier():
+    def __init__(self, id, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, product_price, product_description, product_image_url, seller_id, seller_name, quantite, prix_total):
+        self.id = id
+        self.buyer_id=buyer_id
+        self.buyer_last_name= buyer_last_name
+        self.buyer_first_name=buyer_first_name
+        self.product_id =product_id
+        self.product_name = product_name
+        self.product_price = product_price
+        self.product_description = product_description
+        self.product_image_url = product_image_url
+        self.seller_id = seller_id
+        self.seller_name = seller_name
+        self.quantite = quantite
+        self.prix_total = prix_total
+
+
+    def get_claims(self):
+        return{
+            "id": self.id,
+            "buyer_id": self.buyer_id,
+            "buyer_last_name": self.buyer_last_name,
+            "buyer_first_name": self.buyer_first_name,
+            "product_id": self.product_id,
+            "product_name": self.product_name,
+            "product_price": self.product_price,
+            "product_description": self.product_description,
+            "product_image_url": self.product_image_url,
+            "seller_id": self.seller_id,
+            "seller_name": self.seller_name,
+            "quantite": self.quantite,
+            "prix_total": self.prix_total
+        }
+    
+    @classmethod
+    def modifier(cls, id, quantite, prix_total):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                UPDATE panier 
+                SET quantite = %s, prix_total = %s 
+                WHERE id = %s
+            """, (quantite, prix_total, id))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
