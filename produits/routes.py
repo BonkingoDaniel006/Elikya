@@ -1,9 +1,12 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from ext import bcrypt, mail, get_db_connection
+from auth.models import User
 from produits.models import Add_panier
 from produits.models import Details_produit
 from produits.models import Ajouter_produit
+from produits.models import Suprimer_produit
+
 
 
 produit_bp = Blueprint('produit', __name__)
@@ -98,4 +101,35 @@ def ajouter_produit():
 
     flash("Produit ajouté avec succès !", "success")
     return redirect(url_for('seller.seller_dashboard'))
-    
+
+
+@produit_bp.route("/suprimer_produit/<int:product_id>", methods=["GET", "POST"])
+@login_required
+def suprimer_produit(product_id):
+    # 1. Vérification de l'existence du produit
+    produit = Details_produit.get_by_id(product_id)
+    if not produit:
+        flash("Produit introuvable.", "danger")
+        return redirect(url_for('seller.seller_dashboard'))
+
+    user_info = current_user.get_claims()
+    # 2. Sécurité : Vérifier que l'utilisateur est bien le propriétaire
+    if produit.seller_id != user_info.get('id'):
+        flash("Action non autorisée.", "danger")
+        return redirect(url_for('seller.seller_dashboard'))
+
+    if request.method == "GET":
+        # Redirection vers le dashboard avec un paramètre pour déclencher la modale de confirmation
+        return redirect(url_for('seller.seller_dashboard', confirm_delete=product_id))
+
+    # 3. POST : Vérification du mot de passe avant suppression
+    password = request.form.get("password")
+    user_db = User.get_by_id(current_user.id)
+
+    if password and bcrypt.check_password_hash(user_db.password, password):
+        Suprimer_produit.supprimer(product_id)
+        flash("Le produit a été supprimé avec succès.", "success")
+    else:
+        flash("Mot de passe incorrect. Suppression annulée.", "danger")
+
+    return redirect(url_for('seller.seller_dashboard'))
