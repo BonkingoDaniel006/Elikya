@@ -47,6 +47,7 @@
     object-fit: cover;
     border: 3px solid #ff4081;
     box-shadow: 0 4px 10px rgba(255, 64, 129, 0.2);
+    flex-shrink: 0;
 }
 
 /* Menu d'options (Trois points) sur les cartes produits */
@@ -215,4 +216,12 @@
 .btn-modal-confirm {
     background: #ff4081;
     color: white;
+}
+
+@media (max-width: 768px) {
+    .shop-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
 }
