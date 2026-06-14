@@ -6,6 +6,7 @@ from produits.models import Add_panier
 from produits.models import Details_produit
 from produits.models import Ajouter_produit
 from produits.models import Suprimer_produit
+from produits.models import Modifier_produit
 
 
 
@@ -131,5 +132,40 @@ def suprimer_produit(product_id):
         flash("Le produit a été supprimé avec succès.", "success")
     else:
         flash("Mot de passe incorrect. Suppression annulée.", "danger")
+
+    return redirect(url_for('seller.seller_dashboard'))
+
+
+@produit_bp.route("/modifier_produit/<int:product_id>", methods=["GET", "POST"])
+@login_required
+def modifier_produit(product_id):
+    produit = Details_produit.get_by_id(product_id)
+    if not produit:
+        flash("Produit introuvable.", "danger")
+        return redirect(url_for('seller.seller_dashboard'))
+
+    user_info = current_user.get_claims()
+    if produit.seller_id != user_info.get('id'):
+        flash("Action non autorisée.", "danger")
+        return redirect(url_for('seller.seller_dashboard'))
+
+    if request.method == "GET":
+        # On pourrait aussi déclencher une modale de modification ici
+        return redirect(url_for('seller.seller_dashboard', update_product=product_id))
+    
+    # Récupération des données pour la modification (exemple avec nom et prix)
+    name = request.form.get("nom_produit")
+    price = request.form.get("prix")
+    description = request.form.get("description")
+    password = request.form.get("password")
+    
+    user_db = User.get_by_id(current_user.id)
+
+    if password and bcrypt.check_password_hash(user_db.password, password):
+        # On passe les nouvelles données au modèle
+        Modifier_produit.modifier(product_id, name=name, price=price, description=description)
+        flash("Le produit a été modifié avec succès.", "success")
+    else:
+        flash("Mot de passe incorrect. Modification annulée.", "danger")
 
     return redirect(url_for('seller.seller_dashboard'))
