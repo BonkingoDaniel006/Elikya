@@ -225,3 +225,97 @@ header {
       height: 100%;
       object-fit: cover;
     }
+
+
+
+
+
+.btn-delete {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background-color: transparent;
+      color: #ff4081;
+      border: 2px solid #ff4081;
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      margin-top: 12px;
+      cursor: pointer;
+    }
+
+    .btn-delete:hover {
+      background-color: #ff4081;
+      color: white;
+      transform: scale(1.02);
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(75, 0, 130, 0.2); /* Teinte indigo légère */
+      backdrop-filter: blur(5px); /* Flou artistique moderne */
+    }
+
+    .modal-box {
+      background: white;
+      margin: 12% auto;
+      padding: 30px;
+      width: 90%;
+      max-width: 400px;
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+      animation: slideUp 0.4s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateY(30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .modal-input {
+      width: 100%;
+      padding: 12px 15px;
+      margin: 15px 0;
+      border: 1px solid #eee;
+      border-radius: 15px;
+      background: #f9f9f9;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    .modal-input:focus {
+      border-color: #ff4081;
+    }
+
+    .btn-modal {
+      padding: 10px 25px;
+      border-radius: 20px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.2s;
+    }
+
+    .btn-modal-cancel {
+      background: #f0f0f0;
+      color: #666;
+    }
+
+    .btn-modal-confirm {
+      background: #ff4081;
+      color: white;
+    }
+
+    .btn-modal:hover {
+      transform: translateY(-2px);
+    }

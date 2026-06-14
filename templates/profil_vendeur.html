@@ -79,6 +79,9 @@
         <p class="description">{{ p.description }}</p>
         <strong class="price">{{ p.price }} $</strong>
       </div>
+      <a href="{{ url_for('produit.suprimer_produit', product_id=p.id) }}" onclick="event.stopPropagation();" class="btn-delete" style="color: red; font-weight: bold; text-decoration: none;">
+        <i class="fa-solid fa-trash"></i> Supprimer l'article
+      </a>
     </div>
     {% endfor %}
 </div> <br> <br>
@@ -86,7 +89,80 @@
 {% if produits|length == 0 %}
 <p>Aucun produit pour le moment.</p>
 {% endif %}
-</main>
 
+
+  <div id="deleteConfirmModal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.5);">
+      <div style="background:white; margin:15% auto; padding:20px; width:350px; border-radius:10px; text-align:center; font-family: sans-serif;">
+          <h3 id="modalTitle">Confirmer la suppression</h3>
+          <p id="modalText">Voulez-vous vraiment supprimer cet article ?</p>
+        
+          <!-- Formulaire pour le mot de passe (Étape 2) -->
+          <form id="deleteForm" method="POST" style="margin-top:20px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+              <div id="passwordStep" style="display:none;">
+                  <label for="password" style="display:block; margin-bottom:10px;">Entrez votre mot de passe :</label>
+                  <input type="password" name="password" id="deletePassword" required 
+                       style="width:80%; padding:8px; margin-bottom:15px; border:1px solid #ccc; border-radius:5px;">
+              </div>
+
+              <div style="display:flex; justify-content:space-around;">
+                  <button type="button" onclick="closeModal()" style="padding:10px 20px; cursor:pointer; background:#eee; border:none; border-radius:5px;">Annuler</button>
+                
+                  <!-- Ce bouton change de rôle selon l'étape -->
+                  <button type="button" id="confirmBtn" onclick="nextStep()" 
+                          style="padding:10px 20px; cursor:pointer; background:#d9534f; color:white; border:none; border-radius:5px;">
+                      Oui, supprimer
+                  </button>
+              </div>
+          </form>
+      </div>
+  </div>
+
+  
+
+
+</main>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 1. On vérifie si l'URL contient le paramètre confirm_delete envoyé par le back-end
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get('confirm_delete');
+
+    if (productId) {
+        showModal(productId);
+    }
+});
+
+let currentProductId = null;
+
+function showModal(id) {
+    currentProductId = id;
+    document.getElementById('deleteConfirmModal').style.display = 'block';
+    // On définit l'action du formulaire dynamiquement en utilisant l'URL générée par Flask
+    document.getElementById('deleteForm').action = "{{ url_for('produit.suprimer_produit', product_id=0) }}".replace('0', id);
+}
+
+function nextStep() {
+    const passwordStep = document.getElementById('passwordStep');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const modalText = document.getElementById('modalText');
+
+    if (passwordStep.style.display === 'none') {
+        // Passage à l'étape du mot de passe
+        modalText.innerText = "Sécurité : Veuillez confirmer votre identité pour finaliser la suppression.";
+        passwordStep.style.display = 'block';
+        confirmBtn.innerText = "Valider la suppression";
+        confirmBtn.type = "submit"; // Le bouton devient un submit pour envoyer le POST
+    }
+}
+
+function closeModal() {
+    document.getElementById('deleteConfirmModal').style.display = 'none';
+    // On nettoie l'URL (on retire le confirm_delete)
+    window.location.href = "{{ url_for('seller.seller_dashboard') }}";
+}
+</script>
+<footer><a href="{{ url_for('auth.deconnexion') }}" class="secondary">Se déconnecter</a></footer>
 </body>
 </html>

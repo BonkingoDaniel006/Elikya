@@ -155,3 +155,37 @@ class Ajouter_produit():
         finally:
             cursor.close()
             conn.close()
+
+
+
+class Suprimer_produit():
+    def __init__(self, id, seller_id, name, price, description, image_url):
+        self.id = id
+        self.seller_id = seller_id
+        self.name= name
+        self.price= price
+        self.description= description
+        self.image_url= image_url
+
+    def get_claims(self):
+        return {
+            "id": self.id,
+            "seller_id": self.seller_id,
+            "name": self.name,
+            "price": self.price,
+            "description": self.description,
+            "image_url": self.image_url
+        }
+    @classmethod
+    def supprimer(cls, id):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("DELETE FROM produits WHERE id = %s", (id,))
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+
+    
