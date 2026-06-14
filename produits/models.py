@@ -212,10 +212,31 @@ class Modifier_produit():
     
     @classmethod
     def modifier(cls, id, seller_id, name, price, description, image_url):
+        ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+        final_image_path = None
+        
+        # 1. Gestion de l'upload si un nouveau fichier est fourni
+        if image_url and hasattr(image_url, 'filename') and image_url.filename != "":
+            extension = image_url.filename.rsplit('.', 1)[-1].lower()
+            if '.' in image_url.filename and extension in ALLOWED_EXTENSIONS:
+                unique_filename = str(uuid.uuid4()) + "." + extension
+                image_path = os.path.join("static/uploads", unique_filename)
+                image_url.save(image_path)
+                final_image_path = "/" + image_path.replace("\\", "/")
+            else:
+                return "Format de fichier non autorisé", 400
+
         conn = get_db_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s, image_url = %s WHERE id = %s", (id, seller_id, name, price, description, image_url))
+            if final_image_path:
+                # Mise à jour incluant la nouvelle image
+                cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s, image_url = %s WHERE id = %s", 
+                               (seller_id, name, price, description, final_image_path, id))
+            else:
+                # Mise à jour sans changer l'image existante
+                cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s WHERE id = %s", 
+                               (seller_id, name, price, description, id))
             conn.commit()
         finally:
             cursor.close()
