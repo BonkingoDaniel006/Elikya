@@ -14,7 +14,7 @@ def init_db_pool(app_config_dict):
     if db_pool is None: # S'assurer qu'il n'est initialisé qu'une seule fois
         db_pool = mysql.connector.pooling.MySQLConnectionPool(
             pool_name="elikya_pool",
-            pool_size=1,
+            pool_size=5,
             host=app_config_dict['MYSQL_HOST'],
             user=app_config_dict['MYSQL_USER'],
             password=app_config_dict['MYSQL_PASSWORD'],

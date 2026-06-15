@@ -1,3 +1,4 @@
+import logging
 from flask import Flask
 from config import Config
 from ext import bcrypt, login_manager, mail, csrf, init_db_pool # Importer init_db_pool
@@ -14,6 +15,9 @@ from notifications.routes import notifications_bp
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+    
+    # Configuration des logs pour capturer les erreurs en production
+    logging.basicConfig(level=logging.INFO)
     
         # Initialiser le pool de base de données APRÈS que la configuration de l'application soit chargée
     init_db_pool(app.config)
