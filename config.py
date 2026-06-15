@@ -20,9 +20,9 @@ class Config:
 
     # Configuration Flask-Mail (Logique de l'architecte)
     MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 465))
-    MAIL_USE_SSL = _env_bool('MAIL_USE_SSL', 'true')
-    MAIL_USE_TLS = _env_bool('MAIL_USE_TLS', 'false')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_SSL = _env_bool('MAIL_USE_SSL', 'false')
+    MAIL_USE_TLS = _env_bool('MAIL_USE_TLS', 'true')
     MAIL_USERNAME = os.environ.get("PROV_EMAIL")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
 

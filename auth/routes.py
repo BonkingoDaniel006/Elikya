@@ -54,7 +54,12 @@ def inscription():
                       sender=current_app.config['MAIL_USERNAME'], 
                       recipients=[user_data['email']])
         msg.body = f"Bonjour {user_data['prenom']},\n\nVotre code de vérification est : {verification}\nCe code expirera dans 2 minutes."
-        mail.send(msg)
+        try:
+            mail.send(msg)
+        except Exception as e:
+            current_app.logger.error(f"Erreur d'envoi d'email : {str(e)}")
+            flash("Le service d'envoi d'emails est temporairement indisponible. Veuillez réessayer plus tard.", "danger")
+            return redirect(url_for('auth.inscription'))
         
         return redirect(url_for('auth.verify'))
             
