@@ -20,9 +20,9 @@ class Config:
 
     # Configuration Flask-Mail (Logique de l'architecte)
     MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 465
-    MAIL_USE_SSL = True
-    MAIL_USE_TLS = False
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 465))
+    MAIL_USE_SSL = _env_bool('MAIL_USE_SSL', 'true')
+    MAIL_USE_TLS = _env_bool('MAIL_USE_TLS', 'false')
     MAIL_USERNAME = os.environ.get("PROV_EMAIL")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
 
@@ -41,5 +41,3 @@ class Config:
     
     # 5. Un mode "Bac à sable" (Sandbox) pour faire de faux paiements pendant le développement.
     SHWARY_SANDBOX = _env_bool("SHWARY_SANDBOX", "true")
-
-
