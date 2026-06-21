@@ -190,3 +190,17 @@ main {
   border-bottom-color: #ff4081;
   color: #ff4081;
 }
+
+
+/* Header de la Boutique - FIX TAILLE PHOTO DE PROFIL */
+.shop-header img {
+    width: 100px !important;
+    max-width: 100px !important;
+    height: 100px !important;
+    max-height: 100px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    border: 3px solid #ff4081;
+    box-shadow: 0 4px 10px rgba(255, 64, 129, 0.2);
+    flex-shrink: 0 !important;
+}

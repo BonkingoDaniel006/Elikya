@@ -131,7 +131,7 @@
       </div>
   </div>
 
-  <!-- Modale de modification (Style DA Elikya) -->
+
   <div id="updateProductModal" class="modal-overlay">
       <div class="modal-box">
           <h3 style="color: #4b0082; margin-top: 0;">Modifier l'article</h3>
@@ -167,13 +167,13 @@
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     
-    // Gestion de la suppression
+    // Gestion de la suppression via URL
     const productId = urlParams.get('confirm_delete');
     if (productId) {
         showModal(productId);
     }
 
-    // Gestion de la modification
+    // Gestion de la modification via URL
     const updateId = urlParams.get('update_product');
     if (updateId) {
         showUpdateModal(updateId);
@@ -181,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 let currentProductId = null;
+
 
 function showModal(id) {
     currentProductId = id;
@@ -198,14 +199,12 @@ function showModal(id) {
     confirmBtn.innerText = "Oui, supprimer";
     confirmBtn.type = "button";
     
-    // Gestionnaire de clic propre
     confirmBtn.onclick = function(e) {
         if (passwordStep.style.display === 'none') {
             nextStep();
         }
     };
 
-    // On définit l'action du formulaire dynamiquement en utilisant l'URL générée par Flask
     document.getElementById('deleteForm').action = "{{ url_for('produit.suprimer_produit', product_id=0) }}".replace('0', id);
 }
 
@@ -215,46 +214,46 @@ function nextStep() {
     const modalText = document.getElementById('modalText');
     const passwordInput = document.getElementById('deletePassword');
 
-    // Étape 2 : Afficher le champ mot de passe
     modalText.innerText = "Sécurité : Veuillez confirmer votre identité pour finaliser la suppression.";
     passwordStep.style.display = 'block';
-    setTimeout(() => passwordInput.focus(), 100); // Petit délai pour assurer le focus
+    setTimeout(() => passwordInput.focus(), 100);
     
     confirmBtn.innerText = "Valider la suppression";
-    confirmBtn.type = "submit"; // Maintenant il peut soumettre le formulaire
+    confirmBtn.type = "submit"; 
+    confirmBtn.onclick = null; // Laisse le formulaire se soumettre
 }
 
 function closeModal() {
     document.getElementById('deleteConfirmModal').style.display = 'none';
-    // On nettoie l'URL (on retire le confirm_delete)
     window.location.href = "{{ url_for('seller.seller_dashboard') }}";
 }
+
 
 function showUpdateModal(id) {
     currentProductId = id;
     const modal = document.getElementById('updateProductModal');
     const infoStep = document.getElementById('updateInfoStep');
     const passwordStep = document.getElementById('updatePasswordStep');
-    const confirmBtn = document.getElementById('updateConfirmBtn');
+    const updateConfirmBtn = document.getElementById('updateConfirmBtn');
 
-    // Récupération des données depuis la carte produit
+    // Récupération des données depuis les attributs data-* de la carte produit
     const card = document.querySelector(`.product-card[data-id="${id}"]`);
     if (card) {
-        document.getElementById('updateName').value = card.dataset.name;
-        document.getElementById('updatePrice').value = card.dataset.price;
-        document.getElementById('updateDesc').value = card.dataset.description;
+        document.getElementById('updateName').value = card.dataset.name || '';
+        document.getElementById('updatePrice').value = card.dataset.price || '';
+        document.getElementById('updateDesc').value = card.dataset.description || '';
     }
 
     modal.style.display = 'block';
     
-    // Réinitialisation de la modale
+    // Réinitialisation de la modale (Etape 1)
     infoStep.style.display = 'block';
     passwordStep.style.display = 'none';
     
-    confirmBtn.innerText = "Suivant";
-    confirmBtn.type = "button";
+    updateConfirmBtn.innerText = "Suivant";
+    updateConfirmBtn.type = "button";
     
-    confirmBtn.onclick = function(e) {
+    updateConfirmBtn.onclick = function(e) {
         if (passwordStep.style.display === 'none') {
             nextUpdateStep();
         }
@@ -266,7 +265,7 @@ function showUpdateModal(id) {
 function nextUpdateStep() {
     const infoStep = document.getElementById('updateInfoStep');
     const passwordStep = document.getElementById('updatePasswordStep');
-    const confirmBtn = document.getElementById('updateConfirmBtn');
+    const updateConfirmBtn = document.getElementById('updateConfirmBtn');
     const passwordInput = document.getElementById('updatePassword');
 
     // Étape 2 : Cacher les infos et demander le mot de passe
@@ -275,9 +274,9 @@ function nextUpdateStep() {
     
     setTimeout(() => passwordInput.focus(), 100);
     
-    confirmBtn.innerText = "Valider les modifications";
-    confirmBtn.type = "submit";
-    confirmBtn.onclick = null;
+    updateConfirmBtn.innerText = "Valider les modifications";
+    updateConfirmBtn.type = "submit";
+    updateConfirmBtn.onclick = null; // Laisse le bouton soumettre le formulaire
 }
 
 function closeUpdateModal() {
