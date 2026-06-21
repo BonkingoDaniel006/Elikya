@@ -85,3 +85,8 @@ def add_product(product_id):
     cursor.close()
     conn.close()
     return redirect(url_for("vendeur_details", product_id=product_id, added=1))
+
+
+
+
+
