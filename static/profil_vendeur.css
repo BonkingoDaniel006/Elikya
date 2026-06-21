@@ -1,260 +1,484 @@
-/* Barre d'onglets pour les profils - Design Initial */
+
+
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(to right, #ffdde1, #c8b6ff);
+  color: #333;
+}
+
+header {
+  background: linear-gradient(to right, #ffdde1, #c8b6ff);
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: sticky;
+  top: 0;
+  z-index: 1001; /* Doit être supérieur aux onglets */
+  gap: 10px;
+}
+
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.logo-container {
+  padding-bottom: 5px;
+  transition: border-bottom 0.3s ease;
+}
+
+.logo-container.active-home {
+  border-bottom: 4px solid #ff4081;
+}
+
+.search-bar {
+  flex: 1;
+  margin: 0 20px;
+  margin-top: -5px; /* Monte légèrement la barre */
+}
+
+/* Navigation Menu */
+.nav-menu {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 20px;
+  align-items: center;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: #4b0082;
+  font-weight: 500;
+  gap: 8px;
+}
+
+.nav-icon {
+  font-size: 1.2rem;
+}
+
+/* Bulle/Conteneur de la petite photo miniature dans la Navbar */
+.nav-item .profile {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid #4b0082;
+}
+
+/* Petite image de profil de la Navbar uniquement */
+.nav-item .profile .profil-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Hamburger Menu (Caché par défaut) */
+.menu-cb { display: none; }
+.hamburger {
+  display: none;
+  cursor: pointer;
+  font-size: 24px;
+  color: #4b0082;
+}
+
+/* Barre d'onglets pour les profils */
 .profile-tabs {
-    display: flex;
-    justify-content: center;
-    background: white;
-    border-bottom: 1px solid #ddd;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-    position: sticky;
-    top: 115px;
-    z-index: 1000;
+  display: flex;
+  justify-content: center;
+  background: white;
+  border-bottom: 1px solid #ddd;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 115px; /* Ajusté pour être juste sous le header principal sticky */
+  z-index: 1000;
 }
 
 .tab-item {
-    padding: 15px 25px;
-    text-decoration: none;
-    color: #4b0082;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    border-bottom: 3px solid transparent;
-    transition: all 0.3s ease;
+  padding: 15px 25px;
+  text-decoration: none;
+  color: #4b0082;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
 }
 
 .tab-item.active {
-    border-bottom-color: #ff4081;
-    color: #ff4081;
+  border-bottom-color: #ff4081;
+  color: #ff4081;
 }
 
-/* Header de la Boutique */
+
+
 .shop-header {
-    display: flex;
-    align-items: center;
-    gap: 25px;
-    background: white;
-    padding: 30px;
-    border-radius: 25px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    margin-bottom: 30px;
-    margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  background: white;
+  padding: 30px;
+  border-radius: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  margin-bottom: 30px;
+  margin-top: 20px;
 }
 
+/* Correction de la photo principale : ronde, fixe et jamais écrasée */
 .shop-header img {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid #ff4081;
-    box-shadow: 0 4px 10px rgba(255, 64, 129, 0.2);
-    flex-shrink: 0;
+  width: 120px !important;
+  height: 120px !important;
+  max-width: 120px !important;
+  max-height: 120px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  border: 3px solid #ff4081;
+  box-shadow: 0 4px 10px rgba(255, 64, 129, 0.2);
+  flex-shrink: 0 !important; /* Empêche l'image de se déformer sur petit écran */
 }
+
+.shop-info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.shop-info .username {
+  margin: 0 0 5px 0;
+  color: #4b0082;
+  font-size: 1.6rem;
+}
+
+.shop-info p {
+  margin: 3px 0;
+  color: #555;
+}
+
+
+
+main {
+  padding: 30px 20px;
+}
+
+.section { 
+  margin-bottom: 30px; 
+  background: white; 
+  padding: 20px; 
+  border-radius: 20px; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+}
+
+.product-grid, .subscriptions-grid, .comments-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 25px;
+}
+
+.card {
+  background: #fdfdfd;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 15px;
+}
+
+.card img { 
+  width: 100%; 
+  border-radius: 10px; 
+  object-fit: cover; 
+}
+
+.card h3 { 
+  margin: 10px 0 5px 0; 
+  font-size: 16px; 
+  color: #4b0082; 
+}
+
+.card p { 
+  font-size: 14px; 
+  color: #555; 
+  margin: 5px 0;
+}
+
+.card .price { 
+  font-weight: bold; 
+  color: #ff4081; 
+  margin-bottom: 5px; 
+}
+
 
 /* Menu d'options (Trois points) sur les cartes produits */
 .product-card {
-    position: relative;
-    overflow: visible !important; /* Permet au menu de ne pas être coupé */
-    display: flex;
-    flex-direction: column;
+  position: relative;
+  overflow: visible !important;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
 }
 
 .product-image {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
-    border-radius: 20px 20px 0 0; /* Garde les arrondis supérieurs */
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 20px 20px 0 0;
 }
 
 .product-options {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 10;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
 }
 
 .options-btn {
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #4b0082;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4b0082;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
 }
 
 .options-btn:hover {
-    background: white;
-    transform: scale(1.1);
+  background: white;
+  transform: scale(1.1);
 }
 
 .options-menu {
-    display: none;
-    position: absolute;
-    right: 0;
-    top: 100%; /* Le menu commence exactement au bas du conteneur d'options */
-    background: white;
-    min-width: 180px;
-    border-radius: 12px;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-    overflow: hidden;
-    border: 1px solid #eee;
-    z-index: 100; /* Assure que le menu passe au-dessus de tout le contenu de la carte */
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 100%;
+  background: white;
+  min-width: 180px;
+  border-radius: 12px;
+  box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+  overflow: hidden;
+  border: 1px solid #eee;
+  z-index: 100;
 }
 
 .product-options:hover .options-menu {
-    display: block;
+  display: block;
 }
 
 .options-menu a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 15px;
-    text-decoration: none;
-    color: #333;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  text-decoration: none;
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.2s;
 }
 
 .options-menu a:hover {
-    background: #f8f9fa;
+  background: #f8f9fa;
 }
 
 .options-menu a.delete-option {
-    color: #ff4081;
+  color: #ff4081;
 }
 
-/* Styles spécifiques au Panier (Profil Acheteur) */
+/* Boutons d'actions */
+.subscribe-btn {
+  display: inline-block;
+  background: #ff4081;
+  color: white;
+  padding: 10px 25px;
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  border: none;
+  cursor: pointer;
+  text-align: center;
+}
+
+.subscribe-btn:hover {
+  background: #4b0082;
+}
+
+/* Styles spécifiques au Panier */
 .cart-item-actions {
-    display: flex;
-    gap: 15px;
-    margin-top: 10px;
+  display: flex;
+  gap: 15px;
+  margin-top: 10px;
 }
 
 .btn-cart-action {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1rem;
-    transition: transform 0.2s;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  transition: transform 0.2s;
 }
 
-.btn-cart-modify {
-    color: #4b0082;
-}
-
-.btn-cart-delete {
-    color: #ff4081;
-}
-
-.btn-cart-action:hover {
-    transform: scale(1.2);
-}
-
+.btn-cart-modify { color: #4b0082; }
+.btn-cart-delete { color: #ff4081; }
+.btn-cart-action:hover { transform: scale(1.2); }
 .cart-modal-item-info {
-    margin-bottom: 20px;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 15px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
 }
 
-/* Bouton Ajouter un produit / S'abonner */
-.subscribe-btn {
-    display: inline-block;
-    background: #ff4081;
-    color: white;
-    padding: 10px 25px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.8rem;
-    transition: all 0.3s ease;
-    margin-top: 10px;
-}
-
-/* Modale de confirmation (Style DA Elikya) */
+/* Modales */
 .modal-overlay {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(75, 0, 130, 0.2);
-    backdrop-filter: blur(5px);
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(75, 0, 130, 0.2);
+  backdrop-filter: blur(5px);
 }
 
 .modal-box {
-    background: white;
-    margin: 12% auto;
-    padding: 30px;
-    width: 90%;
-    max-width: 400px;
-    border-radius: 20px;
-    text-align: center;
-    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-    animation: slideUp 0.4s ease-out;
+  background: white;
+  margin: 12% auto;
+  padding: 30px;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 20px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  animation: slideUp 0.4s ease-out;
 }
 
 @keyframes slideUp {
-    from { transform: translateY(30px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .modal-input {
-    width: 100%;
-    padding: 12px 15px;
-    margin: 15px 0;
-    border: 1px solid #eee;
-    border-radius: 15px;
-    background: #f9f9f9;
-    outline: none;
-    transition: border-color 0.3s;
-    box-sizing: border-box;
+  width: 100%;
+  padding: 12px 15px;
+  margin: 15px 0;
+  border: 1px solid #eee;
+  border-radius: 15px;
+  background: #f9f9f9;
+  outline: none;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
 }
 
 .modal-input:focus {
-    border-color: #ff4081;
+  border-color: #ff4081;
 }
 
 .modal-actions {
-    display: flex;
-    justify-content: space-around;
-    gap: 10px;
-    margin-top: 20px;
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .btn-modal {
-    flex: 1;
-    padding: 12px 20px;
-    border-radius: 20px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    transition: all 0.2s;
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
 }
 
 .btn-modal-cancel {
-    background: #f0f0f0;
-    color: #666;
+  background: #f0f0f0;
+  color: #666;
 }
 
 .btn-modal-confirm {
-    background: #ff4081;
-    color: white;
+  background: #ff4081;
+  color: white;
 }
 
+footer {
+  text-align: center;
+  padding: 30px 10px;
+}
+
+footer a.secondary {
+  color: #666;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+footer a.secondary:hover {
+  color: #ff4081;
+}
+
+
 @media (max-width: 768px) {
-    .shop-header {
-        flex-direction: column;
-        text-align: center;
-        gap: 15px;
-    }
+  .hamburger { 
+    display: block; 
+  }
+  
+  .nav-menu {
+    display: none;
+    width: 100%;
+    background: #fdf2f4;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .nav-list {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .menu-cb:checked ~ .nav-menu {
+    display: flex;
+  }
+  
+  .search-bar {
+    margin: 10px 0;
+  }
+
+  .shop-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+    padding: 20px;
+  }
 }
