@@ -44,15 +44,14 @@ def inscription():
         verification = generer_code_verification()
         session['otp'] = {
             'code': verification,
-            'expires_at': time.time() + 120,
+            'expires_at': time.time() + 1200,
             'attempts': 0
         }
         session['pending_user'] = user_data
 
         # Envoi de l'email
-        msg = Message("Code de vérification Elikya", 
-                      sender=current_app.config['MAIL_USERNAME'], 
-                      recipients=[user_data['email']])
+        msg = Message("Code de vérification Elikya",
+                      recipients=[user_data['email']]) # Utilise MAIL_DEFAULT_SENDER par défaut
         msg.body = f"Bonjour {user_data['prenom']},\n\nVotre code de vérification est : {verification}\nCe code expirera dans 2 minutes."
         try:
             mail.send(msg)

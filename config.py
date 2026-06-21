@@ -12,19 +12,28 @@ def _env_bool(name, default="false"):
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'une_cle_tres_secrete_et_longue_12345')
+    
+    # Sécurité des Sessions (Indispensable pour la production en HTTPS)
+    SESSION_COOKIE_SECURE = True
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+
     MYSQL_HOST = os.environ.get('DB_HOST')
     MYSQL_USER = os.environ.get('DB_USER')
     MYSQL_PASSWORD = os.environ.get('DB_PASSWORD')
     MYSQL_DB = os.environ.get('DB_NAME')
     MYSQL_CURSORCLASS = 'DictCursor'
 
-    # Configuration Flask-Mail (Logique de l'architecte)
-    MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
-    MAIL_USE_SSL = _env_bool('MAIL_USE_SSL', 'false')
-    MAIL_USE_TLS = _env_bool('MAIL_USE_TLS', 'true')
+    # Configuration Flask-Mail optimisée pour la production (Gmail Port 465 SSL)
+   
+    MAIL_SERVER = "smtp.gmail.com"
+    MAIL_PORT = 465
+    MAIL_USE_SSL = True
+    MAIL_USE_TLS = False
     MAIL_USERNAME = os.environ.get("PROV_EMAIL")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
+    MAIL_DEFAULT_SENDER = os.environ.get("PROV_EMAIL")
+    MAIL_SUPPRESS_SEND = False
 
 
     SHWARY_MERCHANT_ID = os.getenv("SHWARY_MERCHANT_ID")
