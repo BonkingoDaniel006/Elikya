@@ -1,4 +1,3 @@
-from config import Config
 from shwary import (
     AuthenticationError,
     InsufficientFundsError,
@@ -7,6 +6,8 @@ from shwary import (
     ShwaryAPIError,
     ValidationError,
 )
+
+from config import Config
 
 _client = None
 
@@ -28,22 +29,31 @@ def get_shwary_client():
     return _client
 
 
-def initiate_payment_sdk(phone, amount, callback_url):
+def close_shwary_client():
+    global _client
+    if _client is not None:
+        _client.close()
+        _client = None
+
+
+def create_payment(phone, amount, reference_id=None, is_sandbox=None):
     """
-    Initialise un paiement en utilisant le SDK Shwary.
-    Lève des exceptions spécifiques en cas d'erreur.
+    Initie un paiement via le SDK officiel shwary-python.
+    reference_id est conservé pour compatibilité (lien commande via shwary_tx_id).
     """
+    del reference_id, is_sandbox  # le SDK ne prend pas referenceId ; lien via tx id
+
     client = get_shwary_client()
     payment = client.initiate_payment(
         country="DRC",
         amount=float(amount),
         phone_number=phone,
-        callback_url=callback_url,
+        callback_url=Config.SHWARY_CALLBACK_URL,
     )
     return payment.model_dump()
 
 
-def verify_transaction_api(tx_id, expected_status, expected_amount):
+def verify_transaction(tx_id, expected_status, expected_amount):
     """
     Confirme un webhook en interrogeant directement l'API Shwary.
     """
@@ -54,3 +64,16 @@ def verify_transaction_api(tx_id, expected_status, expected_amount):
     if int(tx.amount) != int(expected_amount):
         return False
     return True
+
+
+__all__ = [
+    "AuthenticationError",
+    "InsufficientFundsError",
+    "RateLimitingError",
+    "ShwaryAPIError",
+    "ValidationError",
+    "close_shwary_client",
+    "create_payment",
+    "get_shwary_client",
+    "verify_transaction",
+]

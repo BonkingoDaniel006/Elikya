@@ -76,10 +76,22 @@ class Commande:
                 INSERT INTO commande (
                     panier_id, buyer_id, buyer_first_name, buyer_last_name, adresse,
                     product_id, product_name, product_price, product_description, product_image_url,
-                    seller_id, seller_name, quantite, prix_total, date_reception, date_livraison,
-                    heure_livraison, frais_livraison, etat, payment_intent_id
+                    seller_id, seller_name, quantite, prix_total, date_reception, date_livraison, heure_livraison,
+                    frais_livraison, etat, payment_intent_id
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, data_list)
+            conn.commit()
+        finally:
+            cursor.close()
+            conn.close()
+
+    @classmethod
+    def update_transaction_id(cls, internal_ref, shwary_tx_id):
+        """Met à jour la commande avec l'ID de transaction de Shwary."""
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("UPDATE commande SET payment_intent_id = %s WHERE payment_intent_id = %s", (shwary_tx_id, internal_ref))
             conn.commit()
         finally:
             cursor.close()
@@ -92,6 +104,19 @@ class Commande:
         try:
             cursor.execute("UPDATE commande SET etat = %s WHERE payment_intent_id = %s", (status, reference_id))
             conn.commit()
+            return cursor.rowcount # Renvoie le nombre de lignes affectées (0 ou plus)
+        finally:
+            cursor.close()
+            conn.close()
+
+    @classmethod
+    def get_buyer_id_from_ref(cls, reference_id):
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT buyer_id FROM commande WHERE payment_intent_id = %s LIMIT 1", (reference_id,))
+            result = cursor.fetchone()
+            return result['buyer_id'] if result else None
         finally:
             cursor.close()
             conn.close()
@@ -193,3 +218,25 @@ class Modifier_panier():
         finally:
             cursor.close()
             conn.close()
+
+    @classmethod
+    def get_order_by_shwary_tx(cls, shwary_tx_id):
+        """Récupère une commande via son ID de transaction Shwary."""
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        try:
+            cursor.execute("SELECT * FROM commande WHERE payment_intent_id = %s", (shwary_tx_id,)).fetchone()
+            return cursor.fetchone()
+        finally:
+            cursor.close()
+            conn.close()
+
+    @classmethod
+    def record_webhook_event(cls, event_key, shwary_tx_id, status):
+        """Enregistre un événement de webhook pour éviter les doublons."""
+        # Note: Pour une application de production, cette table devrait exister.
+        # CREATE TABLE webhook_events (event_key VARCHAR(255) PRIMARY KEY, ...);
+        # Pour cet exercice, nous allons simuler en loggant.
+        # Dans un cas réel, on ferait un INSERT IGNORE ici.
+        print(f"[WEBHOOK_EVENT] Enregistrement de l'événement: {event_key}")
+        return True

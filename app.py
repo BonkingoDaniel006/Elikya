@@ -20,11 +20,6 @@ def create_app():
     logging.basicConfig(level=logging.INFO)
 
     # Vérification des variables critiques au démarrage
-    if not app.config.get('MAIL_USERNAME') or not app.config.get('MAIL_PASSWORD'):
-        app.logger.error("❌ ERREUR CRITIQUE : PROV_EMAIL ou MAIL_PASSWORD non définis !")
-    else:
-        app.logger.info(f"✅ Configuration Mail prête pour : {app.config.get('MAIL_USERNAME')}")
-        app.logger.info(f"🔹 SMTP Port: {app.config.get('MAIL_PORT')} | SSL: {app.config.get('MAIL_USE_SSL')} | TLS: {app.config.get('MAIL_USE_TLS')}")
     
         # Initialiser le pool de base de données APRÈS que la configuration de l'application soit chargée
     init_db_pool(app.config)
@@ -40,7 +35,7 @@ def create_app():
     app.register_blueprint(feed_bp)
     app.register_blueprint(produit_bp)
     app.register_blueprint(seller_bp)
-    app.register_blueprint(panier_bp)
+    app.register_blueprint(panier_bp) # Cette ligne est cruciale pour activer le webhook
     app.register_blueprint(notifications_bp)
 
 
