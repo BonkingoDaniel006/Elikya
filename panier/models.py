@@ -225,8 +225,8 @@ class Modifier_panier():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
         try:
-            cursor.execute("SELECT * FROM commande WHERE payment_intent_id = %s", (shwary_tx_id,)).fetchone()
-            return cursor.fetchone()
+            cursor.execute("SELECT * FROM commande WHERE payment_intent_id = %s", (shwary_tx_id,))
+            return cursor.fetchone() # Récupère le résultat de la requête précédente
         finally:
             cursor.close()
             conn.close()
