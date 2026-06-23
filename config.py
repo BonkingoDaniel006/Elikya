@@ -45,8 +45,13 @@ class Config:
     SHWARY_BASE_URL = os.getenv("SHWARY_BASE_URL", "https://api.shwary.com")
     
     # 4. On définit l'URL (Webhook) que Shwary devra appeler pour nous dire si le paiement a réussi ou échoué.
-    # Si on est en local, ça ressemble à http://127.0.0.1:5000/api/callback
-    SHWARY_CALLBACK_URL = os.getenv("SHWARY_CALLBACK_URL") or "http://127.0.0.1:5000/api/callback"
+    # IMPORTANT: Pour les tests en local avec ngrok, remplacez la valeur par défaut par votre URL ngrok.
+    # En production, cette variable doit être définie avec votre vrai nom de domaine.
+    SHWARY_CALLBACK_URL = os.getenv("SHWARY_CALLBACK_URL", "https://elikya-hght.onrender.com")
+    
+    # Token secret pour sécuriser l'URL du webhook en production. A définir dans les variables d'environnement sur Render.
+    CALLBACK_PATH_TOKEN = os.getenv("CALLBACK_PATH_TOKEN")
     
     # 5. Un mode "Bac à sable" (Sandbox) pour faire de faux paiements pendant le développement.
-    SHWARY_SANDBOX = _env_bool("SHWARY_SANDBOX", "true")
+    # En production, cette valeur doit être "false".
+    SHWARY_SANDBOX = _env_bool("SHWARY_SANDBOX", "false")

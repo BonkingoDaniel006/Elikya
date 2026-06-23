@@ -18,15 +18,15 @@ def envoyer_otp_brevo(email_destinataire, prenom, code_otp):
     """Fonction utilitaire pour envoyer l'OTP via l'API HTTP de Brevo"""
     url = "https://api.brevo.com/v3/smtp/email"
     
-    # Récupération de la clé API depuis les variables d'environnement
+    
     api_key = os.getenv("BREVO_API_KEY")
     if not api_key:
         current_app.logger.error("La variable d'environnement BREVO_API_KEY n'est pas configurée.")
         return False
 
     payload = {
-        # Remplace par l'adresse email que tu as validée dans ton compte Brevo
-        "sender": {"name": "Elikya", "email": "bokingodaniel4@gmail.com"}, 
+        
+        "sender": {"name": "Elikya", "email": "bokingopro.com"}, 
         "to": [{"email": email_destinataire}],
         "subject": "Code de vérification Elikya",
         "htmlContent": f"""
@@ -43,7 +43,7 @@ def envoyer_otp_brevo(email_destinataire, prenom, code_otp):
     }
     
     try:
-        # Timeout de 5 secondes pour éviter de bloquer l'application si l'API est lente
+        
         response = requests.post(url, json=payload, headers=headers, timeout=5)
         if response.status_code == 201:
             return True
@@ -89,7 +89,7 @@ def inscription():
         }
         session['pending_user'] = user_data
 
-        # Remplacement de Flask-Mail par l'appel API Brevo
+        
         email_envoye = envoyer_otp_brevo(
             email_destinataire=user_data['email'], 
             prenom=user_data['prenom'], 
