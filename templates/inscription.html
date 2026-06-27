@@ -14,6 +14,19 @@
     <h1>Création de compte Elikya</h1>
   </div>
 
+  {# --- DEBUT DE L'AJOUT --- #}
+  {# Ce bloc récupère et affiche les messages d'erreur (comme "mot de passe trop court") #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert-{{ category }}" style="color: red; text-align: center; margin-bottom: 15px; font-weight: bold;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  {# --- FIN DE L'AJOUT --- #}
+
   <form action="{{ url_for('auth.inscription') }}" method="post">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -38,8 +51,8 @@
     <label for="motdepassecon"> Confirmer mot de passe :</label>
     <input type="password" id="motdepassecon2" name="confirm_password" required>
 
-    <input type="checkbox" id="conditions" name="conditions" value="conditions" required>
-    <label for="conditions">J'ai lu et accepter les <span>conditions d'usage</span> et je m'engage au respect de la politique et aux règles d'utilisisation</label><br>
+    <input type="checkbox" id="privacy_policy" name="privacy_policy" value="accepted" required>
+    <label for="privacy_policy">J'ai lu et j'accepte les <span>conditions d'usage</span> et la politique de confidentialité.</label><br>
 
   
 
