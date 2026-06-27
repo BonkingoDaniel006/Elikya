@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from ext import csrf, get_db_connection
+from notifications.models import Notification
 from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
 from payment_service import initiate_payment_sdk, verify_transaction_api
 import uuid
@@ -267,6 +268,12 @@ def _handle_shwary_callback():
             else:
                 print(f"[DATABASE WARNING] Impossible de retrouver l'acheteur pour la transaction {transaction_id} pour vider le panier.")
             
+            # 4. Créer une notification de succès pour l'utilisateur
+            if buyer_id:
+                Notification.create(
+                    user_id=buyer_id,
+                    message=f"Votre paiement pour la commande (Réf: ...{transaction_id[-6:]}) a été accepté.",
+                    type='success')
         except Exception as db_err:
             print(f"[DATABASE CRITICAL ERROR] Erreur lors de l'écriture de la commande en BDD : {db_err}")
             return jsonify({"error": "Database processing failed"}), 500
@@ -277,9 +284,18 @@ def _handle_shwary_callback():
         print(f"[REASON] Raison de l'échec transmise par le terminal : '{failure_reason}'")
 
         try:
+            # Mettre à jour le statut de la commande
             Commande.update_status(transaction_id, "echoue")
             print(f"[INFO] Statut de la commande pour la transaction {transaction_id} mis à jour à 'echoue'.")
-        except Exception as err:
+
+            # Créer une notification d'échec pour l'utilisateur
+            buyer_id = Commande.get_buyer_id_from_ref(transaction_id)
+            if buyer_id:
+                Notification.create(
+                    user_id=buyer_id,
+                    message=f"Votre paiement pour la commande (Réf: ...{transaction_id[-6:]}) a échoué.",
+                    type='danger')
+        except Exception as err: # noqa
             print(f"[ERROR] Impossible d'enregistrer l'échec en BDD : {err}")
 
     else:
@@ -290,21 +306,23 @@ def _handle_shwary_callback():
     return jsonify({"status": "updated"}), 200
 
 
-@panier_bp.route("/modifier_article/<int:cart_id>", methods=["POST"])
+@panier_bp.route("/modifier_article/<int:cart_id>", methods=["PATCH"])
 @login_required
 def modifier_article(cart_id):
     """Met à jour la quantité et le prix total d'un article dans le panier."""
     try:
         quantite = int(request.form.get("quantite", 1))
         if quantite <= 0:
-            return redirect(url_for('panier.supprimer_article', cart_id=cart_id))
+            # Si la quantité est 0 ou moins, on supprime l'article directement
+            Suprimer_panier.supprimer(cart_id, current_user.id)
+            flash("Article retiré du panier.", "success")
+            return redirect(url_for('panier.panier'))
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT product_price FROM panier WHERE id = %s", (cart_id,))
+        # On vérifie que l'article appartient bien à l'utilisateur
+        cursor.execute("SELECT product_price FROM panier WHERE id = %s AND buyer_id = %s", (cart_id, current_user.id))
         item = cursor.fetchone()
-        cursor.close()
-        conn.close()
 
         if item:
             prix_total = quantite * float(item['product_price'])
@@ -313,13 +331,16 @@ def modifier_article(cart_id):
     except Exception as e:
         current_app.logger.error(f"Erreur modification panier: {e}")
         flash("Impossible de modifier la quantité.", "danger")
+    finally:
+        if 'cursor' in locals() and cursor: cursor.close()
+        if 'conn' in locals() and conn: conn.close()
 
     return redirect(url_for('panier.panier'))
 
-@panier_bp.route("/supprimer_article/<int:cart_id>", methods=["POST"])
+@panier_bp.route("/supprimer_article/<int:cart_id>", methods=["DELETE"])
 @login_required
 def supprimer_article(cart_id):
     """Supprime définitivement un article du panier."""
-    Suprimer_panier.supprimer(cart_id)
-    flash("Article retiré du panier.", "success")
-    return redirect(url_for('panier.panier'))
+    Suprimer_panier.supprimer(cart_id, current_user.id)
+    # Pour une API, on renvoie une réponse JSON plutôt qu'un message flash
+    return jsonify({"message": "Article retiré du panier."}), 200

@@ -86,9 +86,9 @@
           <a href="{{url_for('produit.modifier_produit', product_id=p.id)}}">
             <i class="fa-solid fa-pen-to-square"></i> Modifier l'article
           </a>
-          <a href="{{ url_for('produit.suprimer_produit', product_id=p.id) }}" class="delete-option">
+          <button type="button" onclick="showModal({{ p.id }})" class="delete-option">
             <i class="fa-solid fa-trash"></i> Supprimer l'article
-          </a>
+          </button>
         </div>
       </div>
       <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-image">
@@ -113,7 +113,7 @@
         
           <!-- Formulaire pour le mot de passe (Étape 2) -->
           <form id="deleteForm" method="POST" style="margin-top:20px;">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> <!-- CHAMP CSRF AJOUTÉ -->
             
               <div id="passwordStep" style="display:none;">
                   <input type="password" name="password" id="deletePassword" placeholder="Entrez votre mot de passe" class="modal-input" required>

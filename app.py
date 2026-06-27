@@ -1,7 +1,9 @@
 import logging
-from flask import Flask
+from flask import Flask, session, flash, redirect, url_for
 from config import Config
-from ext import bcrypt, login_manager, mail, csrf, init_db_pool # Importer init_db_pool
+from flask_login import current_user, logout_user
+import time 
+from ext import bcrypt, login_manager, mail, csrf, init_db_pool, init_redis_client # Importer les initialiseurs
 from ext import get_db_connection # S'assurer que get_db_connection est importé si utilisé ailleurs
 from auth.routes import auth_bp
 from auth.models import User
@@ -19,10 +21,30 @@ def create_app():
     # Configuration des logs pour capturer les erreurs en production
     logging.basicConfig(level=logging.INFO)
 
+    @app.before_request
+    def check_session_inactivity():
+        """
+        Déconnecte l'utilisateur si sa dernière activité remonte à plus de
+        PERMANENT_SESSION_LIFETIME (30 minutes).
+        """
+        if current_user.is_authenticated:
+            last_activity = session.get('last_activity_time')
+            session_lifetime = app.config.get('PERMANENT_SESSION_LIFETIME')
+
+            if last_activity and session_lifetime:
+                elapsed_time = time.time() - last_activity
+                if elapsed_time > session_lifetime.total_seconds():
+                    logout_user()
+                    session.clear()
+                    flash("Votre session a expiré pour inactivité. Veuillez vous reconnecter.", "info")
+                    return redirect(url_for('auth.connexion'))
+            session['last_activity_time'] = time.time()
+
     # Vérification des variables critiques au démarrage
     
         # Initialiser le pool de base de données APRÈS que la configuration de l'application soit chargée
     init_db_pool(app.config)
+    init_redis_client(app.config)
     # Initialisation des extensions avec l'application Flask
     bcrypt.init_app(app)
     csrf.init_app(app)

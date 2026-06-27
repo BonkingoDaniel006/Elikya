@@ -157,11 +157,11 @@ class Suprimer_panier():
             "prix_total": self.prix_total
         }
     @classmethod
-    def supprimer(cls, id):
+    def supprimer(cls, id, buyer_id):
         conn = get_db_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("DELETE FROM panier WHERE id = %s", (id,))
+            cursor.execute("DELETE FROM panier WHERE id = %s AND buyer_id = %s", (id, buyer_id))
             conn.commit()
         finally:
             cursor.close()
@@ -205,15 +205,15 @@ class Modifier_panier():
         }
     
     @classmethod
-    def modifier(cls, id, quantite, prix_total):
+    def modifier(cls, id, buyer_id, quantite, prix_total):
         conn = get_db_connection()
         cursor = conn.cursor()
         try:
             cursor.execute("""
                 UPDATE panier 
                 SET quantite = %s, prix_total = %s 
-                WHERE id = %s
-            """, (quantite, prix_total, id))
+                WHERE id = %s AND buyer_id = %s
+            """, (quantite, prix_total, id, buyer_id))
             conn.commit()
         finally:
             cursor.close()

@@ -2,12 +2,16 @@ from flask_login import UserMixin
 from ext import get_db_connection
 
 class User(UserMixin):
-    def __init__(self, id, email, password, prenom=None, nom=None, nom_boutique=None):
+    def __init__(self, id, email, password, prenom=None, nom=None, postnom=None, description=None, profil=None, adresse=None, nom_boutique=None):
         self.id = id
         self.email = email
         self.password = password
         self.prenom = prenom
         self.nom = nom
+        self.postnom = postnom
+        self.description = description
+        self.profil = profil
+        self.adresse = adresse
         self.nom_boutique = nom_boutique
 
     def get_claims(self):
@@ -17,6 +21,10 @@ class User(UserMixin):
             "email": self.email,
             "first_name": self.prenom,
             "last_name": self.nom,
+            "postnom": self.postnom,
+            "description": self.description,
+            "profil": self.profil,
+            "adresse": self.adresse,
             "nom_boutique": self.nom_boutique
         }
 
@@ -24,23 +32,31 @@ class User(UserMixin):
     def get_by_id(cls, user_id):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT id, email, password, prenom, nom, nom_boutique FROM users WHERE id = %s", (user_id,))
+        # CORRECTION : On sélectionne toutes les colonnes nécessaires pour le header
+        cursor.execute(
+            "SELECT id, email, password, prenom, nom, postnom, description, profil, adresse, nom_boutique FROM users WHERE id = %s", 
+            (user_id,)
+        )
         row = cursor.fetchone()
         cursor.close()
         conn.close()
         if row:
-            return cls(row['id'], row['email'], row['password'], row['prenom'], row['nom'], row['nom_boutique'])
+            return cls(**row)
         return None
     @classmethod
     def get_by_email(cls, email):
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT id, email, password, prenom, nom, nom_boutique FROM users WHERE email = %s", (email,))
+        # CORRECTION : On sélectionne toutes les colonnes nécessaires pour le header
+        cursor.execute(
+            "SELECT id, email, password, prenom, nom, postnom, description, profil, adresse, nom_boutique FROM users WHERE email = %s", 
+            (email,)
+        )
         row = cursor.fetchone()
         cursor.close()
         conn.close()
         if row:
-            return cls(row['id'], row['email'], row['password'], row['prenom'], row['nom'], row['nom_boutique'])
+            return cls(**row)
         return None
 
     @classmethod

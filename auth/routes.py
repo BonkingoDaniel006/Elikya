@@ -1,17 +1,15 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 import time
+from redis.exceptions import ConnectionError as RedisConnectionError
 from ext import bcrypt
+from ext import get_redis_client
 from auth.models import User
 from feed.models import Produits
 from auth.services import process_registration, process_otp_validation
 
 auth_bp = Blueprint('auth', __name__)
 
-# --- Configuration de la protection contre la force brute ---
-# Dictionnaire pour stocker les tentatives échouées en mémoire.
-# Format: {'email': {'failures': count, 'last_attempt': timestamp}}
-login_attempts = {}
 MAX_ATTEMPTS = 5
 LOCKOUT_PERIOD_SECONDS = 900  # 15 minutes
 
@@ -94,33 +92,40 @@ def connexion():
         email = (request.form.get('email') or '').strip()
         password = (request.form.get('password') or '').strip()
 
-        # --- DÉBUT DE LA PROTECTION FORCE BRUTE ---
-        # 1. Vérifier si le compte est actuellement verrouillé
-        if email in login_attempts:
-            user_attempts = login_attempts[email]
-            if user_attempts['failures'] >= MAX_ATTEMPTS:
-                time_since_last_attempt = time.time() - user_attempts['last_attempt']
-                if time_since_last_attempt < LOCKOUT_PERIOD_SECONDS:
-                    remaining_time = int((LOCKOUT_PERIOD_SECONDS - time_since_last_attempt) / 60)
-                    flash(f"Trop de tentatives échouées. Compte bloqué pour encore {remaining_time} minutes.", 'danger')
-                    return render_template('connexion.html')
-                else:
-                    # Si la période de blocage est terminée, on réinitialise
-                    login_attempts.pop(email, None)
+        try:
+            redis = get_redis_client()
+            # Clé Redis unique pour suivre les tentatives de cet email
+            attempt_key = f"login_attempts:{email}"
+
+            # --- DÉBUT DE LA PROTECTION FORCE BRUTE ---
+            # 1. Vérifier si le compte est actuellement verrouillé
+            remaining_time = redis.ttl(attempt_key)
+            if remaining_time > 0:
+                minutes_left = int(remaining_time / 60)
+                flash(f"Trop de tentatives échouées. Compte bloqué pour encore {minutes_left} minutes.", 'danger')
+                return render_template('connexion.html')
+        except RedisConnectionError:
+            current_app.logger.critical("CRITICAL: Could not connect to Redis. Brute-force protection is disabled.")
+            redis = None # On s'assure que redis est None pour la suite
 
         user = User.get_by_email(email)
 
         if user and bcrypt.check_password_hash(user.password, password):
             # 2. En cas de succès, on réinitialise le compteur
-            login_attempts.pop(email, None)
+            if redis:
+                redis.delete(attempt_key)
             login_user(user, remember=True) # <-- MODIFICATION : Utilise la durée de vie de la session
+            # On initialise le timer d'inactivité
+            session['last_activity_time'] = time.time()
             return redirect(url_for('auth.index'))
         else:
             # 3. En cas d'échec, on incrémente le compteur
-            if email not in login_attempts:
-                login_attempts[email] = {'failures': 0, 'last_attempt': 0}
-            login_attempts[email]['failures'] += 1
-            login_attempts[email]['last_attempt'] = time.time()
+            if redis:
+                # Incrémente le compteur et vérifie s'il atteint la limite
+                current_attempts = redis.incr(attempt_key)
+                if current_attempts >= MAX_ATTEMPTS:
+                    # Si la limite est atteinte, on bloque le compte pour 15 minutes
+                    redis.expire(attempt_key, LOCKOUT_PERIOD_SECONDS)
             flash('Identifiants incorrects', 'danger')
     return render_template('connexion.html')
 @auth_bp.route('/index')
