@@ -28,13 +28,13 @@
   <nav class="nav-menu">
     <ul class="nav-list">
       <li><a href="{{ url_for('auth.index') }}" class="nav-item">
-        <img src="{{ url_for('static', filename='profils/home.png') }}" class="nav-icon"> Accueil
+        <i class="fa-solid fa-house nav-icon"></i> Accueil
       </a></li>
       <li><a href="{{ url_for('notification.notifications') }}" class="nav-item">
-        <img src="{{ url_for('static', filename='profils/notification.png') }}" class="nav-icon"> Notifications
+        <i class="fa-solid fa-bell nav-icon"></i> Notifications
       </a></li>
       <li><a href="{{ url_for('panier.panier') }}" class="nav-item">
-        <img src="{{ url_for('static', filename='profils/panier.png') }}" class="nav-icon"> Panier
+        <i class="fa-solid fa-cart-shopping nav-icon"></i> Panier
       </a></li>
       <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
         <div class="profile" style="width:30px; height:30px;">

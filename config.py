@@ -16,6 +16,11 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
  
+    # --- Configuration Redis pour le rate limiting et les sessions ---
+    REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+    REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+    REDIS_DB = int(os.getenv('REDIS_DB', 0))
+
     MYSQL_HOST = os.environ.get('DB_HOST')
     MYSQL_USER = os.environ.get('DB_USER')
     MYSQL_PASSWORD = os.environ.get('DB_PASSWORD')

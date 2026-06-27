@@ -3,7 +3,11 @@ from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
 import mysql.connector.pooling
+import redis
 # from config import Config # Ne pas importer Config directement au niveau du module
+
+# Initialisation du client Redis
+redis_client = None
 
 # Initialisation du pool de connexions (une seule fois pour toute l'app)
 db_pool = None # Initialiser db_pool à None
@@ -21,9 +25,23 @@ def init_db_pool(app_config_dict):
             database=app_config_dict['MYSQL_DB']
         )
 
+def init_redis_client(app_config_dict):
+    """Initialise le client Redis."""
+    global redis_client
+    if redis_client is None:
+        redis_client = redis.Redis(
+            host=app_config_dict['REDIS_HOST'],
+            port=app_config_dict['REDIS_PORT'],
+            db=app_config_dict['REDIS_DB'],
+            decode_responses=True # Pour obtenir des chaînes de caractères au lieu de bytes
+        )
+
 def get_db_connection():
     """Fonction unique pour récupérer une connexion du pool"""
     return db_pool.get_connection()
+
+def get_redis_client():
+    return redis_client
 
 # Initialisation à vide des extensions (pattern factory)
 bcrypt = Bcrypt()
