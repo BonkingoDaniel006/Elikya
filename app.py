@@ -46,6 +46,9 @@ def load_user(user_id):
     """Fonction obligatoire pour Flask-Login permettant de recharger l'utilisateur depuis la session."""
     return User.get_by_id(int(user_id))
 
+
 if __name__ == '__main__':
     app = create_app()
-    app.run(debug=True)
+    
+    # On utilise directement la variable de configuration dédiée au debug
+    app.run(debug=app.config['FLASK_DEBUG'])
