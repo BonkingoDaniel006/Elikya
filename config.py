@@ -1,10 +1,21 @@
 import os 
 from dotenv import load_dotenv
+from datetime import timedelta
 
 load_dotenv()
 
 class Config:
+    
     SECRET_KEY = os.environ.get('SECRET_KEY')
+    FLASK_DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() in ('true', '1', 't')
+    
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=30) # <-- AJOUT : Déconnexion après 30 minutes
+
+    # --- Configuration de sécurité des Cookies (centralisée) ---
+    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True').lower() in ('true', '1', 't')
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SAMESITE = 'Lax'
+ 
     MYSQL_HOST = os.environ.get('DB_HOST')
     MYSQL_USER = os.environ.get('DB_USER')
     MYSQL_PASSWORD = os.environ.get('DB_PASSWORD')

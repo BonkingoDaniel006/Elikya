@@ -113,7 +113,7 @@ def connexion():
         if user and bcrypt.check_password_hash(user.password, password):
             # 2. En cas de succès, on réinitialise le compteur
             login_attempts.pop(email, None)
-            login_user(user)
+            login_user(user, remember=True) # <-- MODIFICATION : Utilise la durée de vie de la session
             return redirect(url_for('auth.index'))
         else:
             # 3. En cas d'échec, on incrémente le compteur
