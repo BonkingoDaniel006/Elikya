@@ -1,41 +1,25 @@
 import os 
 from dotenv import load_dotenv
-import secrets
 
 load_dotenv()
 
-
-def _env_bool(name, default="false"):
-    return os.getenv(name, default).lower() in ("1", "true", "yes")
-
-
-
 class Config:
-    SECRET_KEY = os.environ.get('SECRET_KEY', 'une_cle_tres_secrete_et_longue_12345')
-    
-    # Sécurité des Sessions (Indispensable pour la production en HTTPS)
-    SESSION_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'Lax'
-
+    SECRET_KEY = os.environ.get('SECRET_KEY')
     MYSQL_HOST = os.environ.get('DB_HOST')
     MYSQL_USER = os.environ.get('DB_USER')
     MYSQL_PASSWORD = os.environ.get('DB_PASSWORD')
     MYSQL_DB = os.environ.get('DB_NAME')
     MYSQL_CURSORCLASS = 'DictCursor'
 
-    # Configuration Flask-Mail optimisée pour la production (Gmail Port 465 SSL)
-   
-    MAIL_SERVER = "smtp.gmail.com"
+    # Configuration Flask-Mail (Logique de l'architecte)
+    MAIL_SERVER = 'smtp.gmail.com'
     MAIL_PORT = 465
     MAIL_USE_SSL = True
     MAIL_USE_TLS = False
     MAIL_USERNAME = os.environ.get("PROV_EMAIL")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    MAIL_DEFAULT_SENDER = os.environ.get("PROV_EMAIL")
-    MAIL_SUPPRESS_SEND = False
-
-
+    
+    # 1. On récupère l'identifiant du marchand fourni par Shwary depuis le fichier .env
     SHWARY_MERCHANT_ID = os.getenv("SHWARY_MERCHANT_ID")
     
     # 2. On récupère la clé secrète fournie par Shwary
@@ -45,13 +29,8 @@ class Config:
     SHWARY_BASE_URL = os.getenv("SHWARY_BASE_URL", "https://api.shwary.com")
     
     # 4. On définit l'URL (Webhook) que Shwary devra appeler pour nous dire si le paiement a réussi ou échoué.
-    # IMPORTANT: Pour les tests en local avec ngrok, remplacez la valeur par défaut par votre URL ngrok.
-    # En production, cette variable doit être définie avec votre vrai nom de domaine.
-    SHWARY_CALLBACK_URL = os.getenv("SHWARY_CALLBACK_URL", "https://elikya-hght.onrender.com")
-    
-    # Token secret pour sécuriser l'URL du webhook en production. A définir dans les variables d'environnement sur Render.
-    CALLBACK_PATH_TOKEN = os.getenv("CALLBACK_PATH_TOKEN")
+    # Si on est en local, ça ressemble à http://127.0.0.1:5000/api/callback
+    SHWARY_CALLBACK_URL = os.getenv("SHWARY_CALLBACK_URL") or "http://127.0.0.1:5000/api/callback"
     
     # 5. Un mode "Bac à sable" (Sandbox) pour faire de faux paiements pendant le développement.
-    # En production, cette valeur doit être "false".
-    SHWARY_SANDBOX = _env_bool("SHWARY_SANDBOX", "false")
+    SHWARY_SANDBOX = os.getenv("SHWARY_SANDBOX", "true").lower() in ("1", "true", "yes")
