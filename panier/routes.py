@@ -1,16 +1,21 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+import logging
+from datetime import datetime, timedelta
+import uuid
+
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, session
 from flask_login import login_required, current_user
 from ext import csrf, get_db_connection
 from notifications.models import Notification
 from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
-from payment_service import initiate_payment_sdk, verify_transaction_api
-import uuid
-from datetime import datetime, timedelta
 from services.security import validate_phone_drc, normalize_phone_drc
-import secrets
+from services.payment_service import (
+    create_payment,
+    verify_transaction_api,
+    ValidationError,
+    AuthenticationError,
+    ShwaryAPIError,
+)
 from config import Config
-import logging
-from shwary import ValidationError, AuthenticationError, ShwaryAPIError, InsufficientFundsError, RateLimitingError
 
 # Configuration d'un logger si ce n'est pas déjà fait
 logger = logging.getLogger(__name__)
@@ -26,7 +31,7 @@ def panier():
     if request.method == "POST":
         method = request.form.get("payment")
         if method in ["orange-money", "airtel-money", "mpesa"]:
-            return redirect(url_for('panier.mobile_money', method=method))
+            return redirect(url_for('panier.checkout', method=method))
         
         flash("Cette méthode de paiement n'est pas encore disponible.", "warning")
         return redirect(url_for('panier.panier'))
@@ -38,25 +43,31 @@ def panier():
 logger = logging.getLogger(__name__)
 
 @panier_bp.route("/mobile_money")
+@panier_bp.route("/checkout")
 @login_required
-def mobile_money():
-    """Étape 2 : Formulaire de saisie du numéro de téléphone."""
-    method = request.args.get('method', 'mobile-money')
+def checkout():
+    """Étape 2 : Formulaire de paiement (à reconstruire)."""
+    method = request.args.get('method')
     user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
-    return render_template("mobile_money.html", method=method, user=user_info)
+    cart_items, total = Panier.get_panier(current_user.id)
+
+    if not cart_items:
+        flash("Votre panier est vide.", "warning")
+        return redirect(url_for('panier.panier'))
+
+    return render_template("mobile_money.html", method=method, user=user_info, cart_total=total)
 
 
 @panier_bp.route("/initiate_mobile_payment", methods=["POST"])
 @login_required
 def initiate_mobile_payment():
     """
-    Étape 3 : Lancement du processus.
-    On vérifie le panier et on lance le paiement Shwary SANS écrire dans la table commande.
+    Étape 3 : Lancement du processus de paiement Shwary.
     """
     phone = request.form.get("phone")
     if not validate_phone_drc(phone):
         flash("Numéro de téléphone invalide (Format attendu: +243...).", "danger")
-        return redirect(url_for('panier.mobile_money'))
+        return redirect(url_for('panier.checkout', method=request.args.get('method')))
 
     normalized_phone = normalize_phone_drc(phone)
     cart_items, total = Panier.get_panier(current_user.id)
@@ -65,87 +76,45 @@ def initiate_mobile_payment():
         flash("Votre panier est vide.", "warning")
         return redirect(url_for('panier.panier'))
 
-    # Génération de la référence unique qui liera Shwary et notre future commande
-    reference_id = str(uuid.uuid4())
-
-    # --- NOUVEL ALGORITHME (ROBUSTE) ---
-    # 1. Préparer les données de la commande AVANT d'appeler le paiement.
+    # 1. Générer une référence interne unique pour pré-enregistrer la commande
+    internal_ref = str(uuid.uuid4())
     user_info = current_user.get_claims()
     order_entries = []
     for item in cart_items:
         order_entries.append((
             item.get('id'), user_info.get('id'), user_info.get('first_name'), user_info.get('last_name'),
-            user_info.get('adresse', 'Kinshasa, RDC'), item.get('product_id'), item.get('product_name'),
+            user_info.get('adresse', 'Non spécifiée'), item.get('product_id'), item.get('product_name'),
             item.get('product_price'), item.get('product_description'), item.get('product_image_url'),
             item.get('seller_id'), item.get('seller_name'), item.get('quantite'), item.get('prix_total'),
             (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
             (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d'),
-            "16:00", 2.5, 
-            "en_attente_paiement",  # Statut initial
-            reference_id
+            "16:00", 2.5, "en_attente_paiement", internal_ref
         ))
 
     try:
-        # 2. Insérer la commande en BDD avec le statut "en_attente_paiement".
+        # 2. Insérer la commande en BDD avec le statut "en_attente_paiement"
         Commande.create(order_entries)
-        print(f"[INFO] Commande pré-enregistrée pour la référence {reference_id} avec le statut 'en_attente_paiement'.")
     except Exception as db_err:
-        print(f"[DATABASE CRITICAL ERROR] Impossible de pré-enregistrer la commande : {db_err}")
+        current_app.logger.error(f"Erreur BDD lors de la pré-création de commande: {db_err}")
         flash("Une erreur de base de données est survenue.", "danger")
         return redirect(url_for('panier.panier'))
-    # --- FIN NOUVEL ALGORITHME ---
-    
+
     try:
-        print(f"\n[TRY] Initialisation du paiement Shwary pour l'utilisateur {current_user.id} (Montant: {total})...")
-        
-        # Construction de l'URL de callback sécurisée pour la production
-        callback_url = Config.SHWARY_CALLBACK_URL.rstrip('/') + '/api/callback'
-        if Config.CALLBACK_PATH_TOKEN:
-            callback_url += f"/{Config.CALLBACK_PATH_TOKEN}"
+        # 3. Appeler le service de paiement pour initier la transaction
+        payment_response = create_payment(normalized_phone, total)
+        shwary_tx_id = payment_response.get('id')
 
-        # Appel du nouveau service basé sur le SDK
-        # Note: le service de paiement doit être mis à jour pour accepter `callback_url`
-        payment_response = initiate_payment_sdk(normalized_phone, total, callback_url)
-        
-        shwary_transaction_id = payment_response.get('id')
-        print(f"[SUCCESS] Requête de paiement acceptée par Shwary. ID Transaction: {shwary_transaction_id}")
+        # 4. Lier l'ID de transaction Shwary à notre commande
+        Commande.link_shwary_transaction(internal_ref, shwary_tx_id)
 
-        # On met à jour notre commande avec l'ID de transaction de Shwary pour faire le lien
-        try:
-            Commande.update_transaction_id(reference_id, shwary_transaction_id)
-            print(f"[INFO] Commande {reference_id} liée à l'ID Shwary {shwary_transaction_id}.")
-        except Exception as db_err:
-            print(f"[DATABASE CRITICAL ERROR] Impossible de lier la commande à l'ID Shwary : {db_err}")
-            flash("Une erreur de base de données est survenue après l'initiation du paiement.", "danger")
-            return redirect(url_for('panier.panier'))
-        return render_template('attente_paiement.html', reference_id=shwary_transaction_id)
+        # 5. Rediriger vers la page d'attente avec l'ID de transaction
+        return render_template('attente_paiement.html', reference_id=shwary_tx_id)
 
-    # Gestion des erreurs spécifiques au SDK pour un feedback utilisateur précis
-    except ValidationError as e:
-        # Erreur de validation (numéro, montant trop bas, etc.)
-        print(f"[SDK VALIDATION ERROR] {e}")
-        flash(f"Données de paiement invalides : {e}", "danger")
-        return redirect(url_for('panier.mobile_money', method=request.args.get('method')))
-    except AuthenticationError as e:
-        # Mauvais credentials, problème côté back-office Shwary
-        print(f"[SDK AUTH ERROR] {e}")
-        current_app.logger.error(f"Erreur d'authentification Shwary: {e}")
-        flash("Erreur de configuration du paiement. L'administrateur a été notifié.", "danger")
-        return redirect(url_for('panier.panier'))
-    except InsufficientFundsError:
-        print("[SDK INSUFFICIENT FUNDS]")
-        current_app.logger.error("Solde Shwary insuffisant.")
-        flash("Le service de paiement est temporairement indisponible.", "danger")
-        return redirect(url_for('panier.panier'))
-    except RateLimitingError:
-        print("[SDK RATE LIMITED]")
-        flash("Le service de paiement est surchargé. Veuillez réessayer dans un instant.", "warning")
-        return redirect(url_for('panier.panier'))
-    except (ShwaryAPIError, ConnectionError, Exception) as e:
-        # Erreur générale de l'API Shwary ou de connexion
-        print(f"[SDK CRITICAL EXCEPTION] Échec lors de l'initialisation du paiement : {e}")
-        current_app.logger.error(f"Erreur API Shwary ou connexion : {e}")
-        flash("Une erreur technique est survenue lors de l'initialisation du paiement.", "danger")
+    except (ValidationError, AuthenticationError, ShwaryAPIError, Exception) as e:
+        current_app.logger.error(f"Erreur lors de l'initiation du paiement Shwary : {e}")
+        flash(f"Une erreur est survenue lors de l'initialisation du paiement : {e}", "danger")
+        # On met à jour la commande pré-créée en 'echoue' pour ne pas la laisser en attente
+        Commande.update_status(internal_ref, "echoue")
         return redirect(url_for('panier.panier'))
 
 
@@ -156,19 +125,12 @@ def check_status(reference_id):
     Route pour le polling JS : vérifie l'état de la commande dans la BDD.
     """
     try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT etat FROM commande WHERE payment_intent_id = %s LIMIT 1", (reference_id,)) # reference_id ici est l'ID de transaction Shwary
-        order = cursor.fetchone()
-        cursor.close()
-        conn.close()
-        
+        order = Commande.get_order_by_shwary_tx(reference_id)
         if order:
             return jsonify({"status": order['etat']})
-        
         return jsonify({"status": "not_found"}), 404
     except Exception as e:
-        print(f"[ERROR] Échec lors du check_status de la référence {reference_id} : {e}")
+        current_app.logger.error(f"Erreur check_status pour {reference_id}: {e}")
         return jsonify({"status": "error"}), 500
 
 
@@ -182,129 +144,74 @@ def paiement_finalise():
 
 @panier_bp.route('/api/callback', methods=['POST'])
 @csrf.exempt
-def shwary_callback_legacy():
-    """Ancienne route de callback. Ne doit pas être utilisée en production si un token est configuré."""
-    if Config.CALLBACK_PATH_TOKEN:
-        current_app.logger.warning("Tentative d'accès au webhook non sécurisé alors qu'un token est configuré.")
-        return jsonify({"error": "not found"}), 404
-    return _handle_shwary_callback()
-
-@panier_bp.route('/api/callback/<token>', methods=['POST'])
-@csrf.exempt
-def shwary_callback_secure(token):
-    """Route de callback sécurisée par un token."""
-    if not Config.CALLBACK_PATH_TOKEN or not secrets.compare_digest(token, Config.CALLBACK_PATH_TOKEN):
-        return jsonify({"error": "not found"}), 404
-    return _handle_shwary_callback()
-
-def _handle_shwary_callback():
+def payment_callback():
     """
-    Logique de traitement du webhook, partagée par les deux routes.
+    Route de callback pour le service de paiement (webhook).
+    La logique de traitement des webhooks de votre nouveau service ira ici.
+    C'est l'URL que vous avez définie dans sdk.md et que Shwary appellera.
     """
     data = request.get_json(silent=True)
-    
-    # Affichage clair du payload complet dans le terminal pour debug
-    print("\n" + "="*50)
-    print("[WEBHOOK RECEIVED] PAYLOAD REÇU DE SHWARY :")
-    print(data)
-    print("="*50 + "\n")
+    current_app.logger.info(f"Webhook Shwary reçu : {data}")
 
-    # --- NOUVELLE LOGIQUE DE VÉRIFICATION SÉCURISÉE ---
-
-    # 1. Vérifications de base
+    # 1. Vérifications de base du payload
     if not data or str(data.get("userId")) != str(Config.SHWARY_MERCHANT_ID):
-        print("[SECURITY ERROR] Le userId du payload ne correspond pas au MERCHANT_ID configuré ou payload vide.")
+        current_app.logger.warning("[WEBHOOK-SECURITY] UserID du payload invalide ou payload vide.")
         return jsonify({"error": "Unauthorized"}), 401
 
-    transaction_id = data.get("id")
+    tx_id = data.get("id")
     status = data.get("status")
     amount = data.get("amount")
-    failure_reason = data.get("failureReason")
 
-    if not all([transaction_id, status, amount]):
+    if not all([tx_id, status, amount]):
         return jsonify({"error": "Payload incomplet"}), 400
 
     # 2. Retrouver la commande dans notre BDD
-    order = Commande.get_order_by_shwary_tx(transaction_id)
+    order = Commande.get_order_by_shwary_tx(tx_id)
     if not order:
-        print(f"[SECURITY WARNING] Commande introuvable pour la transaction Shwary {transaction_id}.")
+        current_app.logger.warning(f"[WEBHOOK-ERROR] Commande introuvable pour la transaction Shwary {tx_id}.")
         return jsonify({"error": "Order not found"}), 404
 
     # 3. Vérifier la cohérence du montant
     if int(float(order['prix_total'])) != int(float(amount)):
-        print(f"[SECURITY ERROR] Montant incohérent. Attendu: {order['prix_total']}, Reçu: {amount}")
+        current_app.logger.error(f"[WEBHOOK-SECURITY] Montant incohérent pour tx {tx_id}. Attendu: {order['prix_total']}, Reçu: {amount}")
         return jsonify({"error": "Amount mismatch"}), 400
 
-    # 4. Double confirmation : on interroge l'API de Shwary pour confirmer le statut
+    # 4. Double confirmation via l'API (mesure de sécurité cruciale)
     try:
-        if not verify_transaction_api(transaction_id, status, amount):
-            print(f"[SECURITY CRITICAL] Le statut du webhook ({status}) n'a pas pu être confirmé via l'API pour la transaction {transaction_id}.")
+        if not verify_transaction_api(tx_id, status, amount):
+            current_app.logger.critical(f"[WEBHOOK-SECURITY] Le statut du webhook ({status}) n'a pas pu être confirmé via l'API pour la tx {tx_id}.")
             return jsonify({"error": "Transaction not confirmed"}), 400
     except Exception as api_err:
-        print(f"[API_CONFIRM_ERROR] Impossible de re-vérifier la transaction {transaction_id} : {api_err}")
+        current_app.logger.error(f"[WEBHOOK-API-ERROR] Impossible de re-vérifier la tx {tx_id} : {api_err}")
         return jsonify({"error": "Verification failed"}), 500
 
-    # 2. Si le paiement a réussi ("completed" selon la documentation Shwary)
+    # 5. Traitement en fonction du statut
     if status == "completed":
-        print(f"[TRY] Le paiement pour la transaction {transaction_id} a REUSSI (completed). Tentative d'écriture en BDD...")
-        
-        try:
-            # 1. Mettre à jour le statut de la commande qui existe déjà
-            updated_rows = Commande.update_status(transaction_id, "paye")
-            
-            if updated_rows == 0:
-                print(f"[DATABASE WARNING] Aucune commande trouvée avec l'ID de transaction {transaction_id} à mettre à jour.")
-                return jsonify({"status": "not_found"}), 200
+        if order['etat'] == 'paye': # Éviter les traitements multiples
+            return jsonify({"status": "already_processed"}), 200
 
-            print(f"[DATABASE SUCCESS] Statut de la commande pour la transaction {transaction_id} mis à jour à 'paye'.")
-            
-            # 2. Retrouver l'ID de l'acheteur depuis la commande pour vider son panier
-            buyer_id = Commande.get_buyer_id_from_ref(transaction_id)
-            
-            # 3. Nettoyage du panier de l'acheteur
-            if buyer_id:
-                Panier.clear_panier(buyer_id)
-                print(f"[DATABASE SUCCESS] Panier de l'utilisateur {buyer_id} vidé.")
-            else:
-                print(f"[DATABASE WARNING] Impossible de retrouver l'acheteur pour la transaction {transaction_id} pour vider le panier.")
-            
-            # 4. Créer une notification de succès pour l'utilisateur
-            if buyer_id:
-                Notification.create(
-                    user_id=buyer_id,
-                    message=f"Votre paiement pour la commande (Réf: ...{transaction_id[-6:]}) a été accepté.",
-                    type='success')
-        except Exception as db_err:
-            print(f"[DATABASE CRITICAL ERROR] Erreur lors de l'écriture de la commande en BDD : {db_err}")
-            return jsonify({"error": "Database processing failed"}), 500
+        Commande.update_status(tx_id, "paye")
+        buyer_id = Commande.get_buyer_id_from_ref(tx_id)
+        if buyer_id:
+            Panier.clear_panier(buyer_id)
+            Notification.create(
+                user_id=buyer_id,
+                message=f"Votre paiement pour la commande (Réf: ...{str(tx_id)[-6:]}) a été accepté.",
+                type='success'
+            )
+        current_app.logger.info(f"Paiement complété et traité pour la tx {tx_id}.")
 
-    # 3. Si le paiement a échoué ou a été annulé par le client
     elif status in ["failed", "cancelled"]:
-        print(f"[PAYMENT FAILED/CANCELLED] Le paiement pour la transaction {transaction_id} a échoué. Statut Shwary: {status}.")
-        print(f"[REASON] Raison de l'échec transmise par le terminal : '{failure_reason}'")
+        Commande.update_status(tx_id, "echoue")
+        buyer_id = Commande.get_buyer_id_from_ref(tx_id)
+        if buyer_id:
+            Notification.create(
+                user_id=buyer_id,
+                message=f"Votre paiement pour la commande (Réf: ...{str(tx_id)[-6:]}) a échoué.",
+                type='danger')
+        current_app.logger.warning(f"Paiement échoué pour la tx {tx_id}.")
 
-        try:
-            # Mettre à jour le statut de la commande
-            Commande.update_status(transaction_id, "echoue")
-            print(f"[INFO] Statut de la commande pour la transaction {transaction_id} mis à jour à 'echoue'.")
-
-            # Créer une notification d'échec pour l'utilisateur
-            buyer_id = Commande.get_buyer_id_from_ref(transaction_id)
-            if buyer_id:
-                Notification.create(
-                    user_id=buyer_id,
-                    message=f"Votre paiement pour la commande (Réf: ...{transaction_id[-6:]}) a échoué.",
-                    type='danger')
-        except Exception as err: # noqa
-            print(f"[ERROR] Impossible d'enregistrer l'échec en BDD : {err}")
-
-    else:
-        # Statuts intermédiaires (ex: 'submitted' ou 'pending') -> Shwary traite l'opération, on ne fait rien.
-        print(f"[INFO] Statut intermédiaire reçu : '{status}'. On attend le résultat final.")
-
-    # Réponse rapide à Shwary (Important: Timeout de 10s max exigé par Shwary)
-    return jsonify({"status": "updated"}), 200
-
+    return jsonify({"status": "ok"}), 200
 
 @panier_bp.route("/modifier_article/<int:cart_id>", methods=["PATCH"])
 @login_required

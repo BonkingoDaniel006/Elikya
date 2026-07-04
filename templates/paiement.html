@@ -87,22 +87,22 @@
 
   <div class="checkout-section">
     <h2>Méthode de paiement</h2>
-    <form id="payment-form" method="POST" action="">
+    <form id="payment-form" method="POST" action="{{ url_for('panier.panier') }}">
       <div class="payment-methods">
         <label>
-          <input type="radio" name="payment" value="" required>
+          <input type="radio" name="payment" value="orange-money" required>
           Orange Money
         </label>
         <label>
-          <input type="radio" name="payment" value="">
+          <input type="radio" name="payment" value="airtel-money">
           Airtel Money
         </label>
         <label>
-          <input type="radio" name="payment" value="">
+          <input type="radio" name="payment" value="mpesa">
           M-Pesa
         </label>
         <label>
-          <input type="radio" name="payment" value="card">
+          <input type="radio" name="payment" value="car" disabled>
           Visa/MasterCard
         </label> 
         <label>
@@ -111,7 +111,7 @@
         </label> 
       </div>
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <button class="pay-btn" type="submit">Payer maintenant</button>
+      <button class="pay-btn" type="submit">Commander maintenant</button>
     </form>
 
       {% if message %}
@@ -124,6 +124,40 @@
   </div>
 
 </main>
+
+<!-- MODALE DE CONFIRMATION POUR PAIEMENT À LA LIVRAISON (CASH)  -->
+
+{% if show_cash_modal %}
+<div id="cashConfirmationModal" class="modal-overlay" style="display: flex;">
+    <div class="modal-box">
+        <h3 style="color: #4b0082; margin-top: 0;"><i class="fa-solid fa-receipt"></i> Confirmation de commande</h3>
+        <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">Veuillez confirmer les détails de votre commande avec paiement à la livraison.</p>
+        
+        <!-- Formulaire qui sera soumis -->
+        <form id="cashOrderForm" method="POST" action="{{ url_for('panier.create_cash_order') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div style="text-align: left; margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+                <p style="margin: 5px 0;">Sous-total : <strong style="float: right;">{{ "%.2f"|format(cart_total) }} $</strong></p>
+                <p style="margin: 5px 0;">Commission : <strong style="float: right;">{{ "%.2f"|format(commission) }} $</strong></p>
+                <p style="margin: 5px 0;">Frais de livraison : <strong style="float: right;">{{ "%.2f"|format(frais_livraison) }} FC</strong></p>
+                <hr style="border: 0; border-top: 1px solid #ccc; margin: 10px 0;">
+                <h4 style="margin: 5px 0;">Total à payer : <strong style="float: right; color: #ff4081;">{{ "%.2f"|format(grand_total) }} $ + {{ "%.2f"|format(frais_livraison) }} FC</strong></h4>
+            </div>
+
+            <div class="modal-actions">
+                <!-- Ce bouton annule et ferme la modale -->
+                <button type="button" onclick="closeCashModal()" class="btn-modal btn-modal-cancel">Annuler</button>
+                
+                <!-- CE BOUTON SOUMET LE FORMULAIRE -->
+                <button type="submit" class="btn-modal btn-modal-confirm">
+                    Commander maintenant
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
 
 <!-- Modale de Modification de Quantité -->
 <div id="editCartModal" class="modal-overlay">
@@ -157,6 +191,16 @@
 </div>
 
 <script>
+// --- Logique pour la modale de paiement cash ---
+function closeCashModal() {
+    const modal = document.getElementById('cashConfirmationModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+
+// --- Logique pour les modales de modification/suppression du panier ---
 function openEditCartModal(id, name, qty) {
     document.getElementById('editItemName').innerText = name;
     document.getElementById('editItemQty').value = qty;
@@ -182,6 +226,9 @@ window.onclick = function(event) {
     if (event.target.classList.contains('modal-overlay')) {
         closeEditModal();
         closeDeleteCartModal();
+        if (document.getElementById('cashConfirmationModal')) {
+            closeCashModal();
+        }
     }
 }
 </script>

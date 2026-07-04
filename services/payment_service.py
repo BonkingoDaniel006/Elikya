@@ -13,11 +13,13 @@ _client = None
 
 
 def _ensure_credentials():
+    """Vérifie la présence des identifiants Shwary dans la configuration."""
     if not Config.SHWARY_MERCHANT_ID or not Config.SHWARY_MERCHANT_KEY:
-        raise ValueError("Identifiants Shwary manquants")
+        raise ValueError("Les identifiants SHWARY_MERCHANT_ID et SHWARY_MERCHANT_KEY sont manquants dans la configuration.")
 
 
 def get_shwary_client():
+    """Initialise et retourne un client Shwary unique (singleton)."""
     global _client
     _ensure_credentials()
     if _client is None:
@@ -29,21 +31,14 @@ def get_shwary_client():
     return _client
 
 
-def close_shwary_client():
-    global _client
-    if _client is not None:
-        _client.close()
-        _client = None
-
-
-def create_payment(phone, amount, reference_id=None, is_sandbox=None):
+def create_payment(phone, amount):
     """
-    Initie un paiement via le SDK officiel shwary-python.
-    reference_id est conservé pour compatibilité (lien commande via shwary_tx_id).
+    Initie une demande de paiement via le SDK Shwary.
+    Lève des exceptions spécifiques en cas d'erreur pour un meilleur contrôle.
     """
-    del reference_id, is_sandbox  # le SDK ne prend pas referenceId ; lien via tx id
-
     client = get_shwary_client()
+    # Le SDK utilise l'URL de callback configurée lors de l'initialisation si non fournie ici.
+    # Pour plus de flexibilité, on la passe explicitement.
     payment = client.initiate_payment(
         country="DRC",
         amount=float(amount),
@@ -53,27 +48,18 @@ def create_payment(phone, amount, reference_id=None, is_sandbox=None):
     return payment.model_dump()
 
 
-def verify_transaction(tx_id, expected_status, expected_amount):
+def verify_transaction_api(tx_id, expected_status, expected_amount):
     """
-    Confirme un webhook en interrogeant directement l'API Shwary.
+    Confirme le statut d'une transaction en interrogeant directement l'API Shwary.
+    C'est une mesure de sécurité cruciale pour valider les webhooks.
     """
     client = get_shwary_client()
     tx = client.get_transaction(tx_id)
+
+    # Vérification stricte du statut et du montant
     if tx.status != expected_status:
         return False
     if int(tx.amount) != int(expected_amount):
         return False
+
     return True
-
-
-__all__ = [
-    "AuthenticationError",
-    "InsufficientFundsError",
-    "RateLimitingError",
-    "ShwaryAPIError",
-    "ValidationError",
-    "close_shwary_client",
-    "create_payment",
-    "get_shwary_client",
-    "verify_transaction",
-]

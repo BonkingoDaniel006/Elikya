@@ -34,19 +34,16 @@ class Config:
     MAIL_USE_TLS = False
     MAIL_USERNAME = os.environ.get("PROV_EMAIL")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
-    
-    # 1. On récupère l'identifiant du marchand fourni par Shwary depuis le fichier .env
-    SHWARY_MERCHANT_ID = os.getenv("SHWARY_MERCHANT_ID")
-    
-    # 2. On récupère la clé secrète fournie par Shwary
-    SHWARY_MERCHANT_KEY = os.getenv("SHWARY_MERCHANT_KEY")
-    
-    # 3. L'URL de base de l'API (avec une valeur par défaut si elle n'est pas dans le .env)
-    SHWARY_BASE_URL = os.getenv("SHWARY_BASE_URL", "https://api.shwary.com")
-    
-    # 4. On définit l'URL (Webhook) que Shwary devra appeler pour nous dire si le paiement a réussi ou échoué.
-    # Si on est en local, ça ressemble à http://127.0.0.1:5000/api/callback
-    SHWARY_CALLBACK_URL = os.getenv("SHWARY_CALLBACK_URL") or "http://127.0.0.1:5000/api/callback"
-    
-    # 5. Un mode "Bac à sable" (Sandbox) pour faire de faux paiements pendant le développement.
-    SHWARY_SANDBOX = os.getenv("SHWARY_SANDBOX", "true").lower() in ("1", "true", "yes")
+
+    # --- Configuration Shwary (basée sur sdk.md) ---
+    # 1. Identifiant du marchand
+    SHWARY_MERCHANT_ID = os.getenv("SHWARY_MERCHANT_ID", "0e0ca537-1d67-414d-8f13-3238be68766e")
+
+    # 2. Clé secrète du marchand
+    SHWARY_MERCHANT_KEY = os.getenv("SHWARY_MERCHANT_KEY", "shwary_d68f0f5d-e7d9-4fb6-ab1d-36f480d0ec9f")
+
+    # 3. URL de callback que Shwary appellera
+    SHWARY_CALLBACK_URL = os.getenv("SHWARY_CALLBACK_URL", "https://essaie-shwary-1.onrender.com/api/webhooks/shwary")
+
+    # 4. Mode Sandbox (désactivé comme dans votre exemple)
+    SHWARY_SANDBOX = os.getenv("SHWARY_SANDBOX", "false").lower() in ("1", "true", "yes")
