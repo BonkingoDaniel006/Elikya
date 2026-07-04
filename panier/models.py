@@ -73,65 +73,10 @@ class Commande:
         cursor = conn.cursor()
         try:
             cursor.executemany("""
-                INSERT INTO commande (
-                    panier_id, buyer_id, buyer_first_name, buyer_last_name, adresse,
-                    product_id, product_name, product_price, product_description, product_image_url,
-                    seller_id, seller_name, quantite, prix_total, date_reception, date_livraison, heure_livraison,
-                    frais_livraison, etat, payment_intent_id
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                INSERT INTO commande (panier_id, buyer_id, buyer_first_name, buyer_last_name, adresse, product_id, product_name, product_price, product_description, product_image_url, seller_id, seller_name, quantite, prix_total, date_reception, date_livraison, heure_livraison, frais_livraison, etat)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, data_list)
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
-
-    @classmethod
-    def link_shwary_transaction(cls, internal_ref, shwary_tx_id):
-        """Met à jour la commande pour lier l'ID de transaction de Shwary."""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
-            # Remplace la référence interne temporaire par le véritable ID de transaction Shwary
-            cursor.execute("UPDATE commande SET payment_intent_id = %s WHERE payment_intent_id = %s", (shwary_tx_id, internal_ref))
-            conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
-
-    @classmethod
-    def update_status(cls, reference_id, status):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
-            # La référence peut être l'ID de transaction Shwary (payment_intent_id)
-            cursor.execute("UPDATE commande SET etat = %s WHERE payment_intent_id = %s", (status, reference_id))
-            conn.commit()
-            return cursor.rowcount # Renvoie le nombre de lignes affectées (0 ou plus)
-        finally:
-            cursor.close()
-            conn.close()
-
-    @classmethod
-    def get_buyer_id_from_ref(cls, reference_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        try:
-            cursor.execute("SELECT buyer_id FROM commande WHERE payment_intent_id = %s LIMIT 1", (reference_id,))
-            result = cursor.fetchone()
-            return result['buyer_id'] if result else None
-        finally:
-            cursor.close()
-            conn.close()
-
-
-    @classmethod
-    def get_order_by_shwary_tx(cls, shwary_tx_id):
-        """Récupère une commande via son ID de transaction Shwary."""
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        try:
-            cursor.execute("SELECT * FROM commande WHERE payment_intent_id = %s", (shwary_tx_id,))
-            return cursor.fetchone()
         finally:
             cursor.close()
             conn.close()

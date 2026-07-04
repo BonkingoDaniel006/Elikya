@@ -7,7 +7,6 @@ from flask import session
 
 from config import Config
 
-PHONE_DRC_PATTERN = re.compile(r"^\+243\d{9}$")
 PRODUCT_ID_PATTERN = re.compile(r"^[a-z0-9_]{2,40}$")
 CONTROL_CHARS = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _rate_buckets = defaultdict(list)
@@ -56,17 +55,6 @@ def validate_csrf_token(token):
     if time.time() - created_at > Config.CSRF_MAX_AGE_SECONDS:
         return False
     return secrets.compare_digest(expected, token)
-
-
-def validate_phone_drc(phone):
-    if not phone:
-        return False
-    normalized = phone.strip().replace(" ", "")
-    return bool(PHONE_DRC_PATTERN.match(normalized))
-
-
-def normalize_phone_drc(phone):
-    return phone.strip().replace(" ", "")
 
 
 def validate_product_id(product_id):

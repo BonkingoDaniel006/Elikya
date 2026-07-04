@@ -1,21 +1,10 @@
 import logging
-from datetime import datetime, timedelta
-import uuid
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, session
 from flask_login import login_required, current_user
 from ext import csrf, get_db_connection
-from notifications.models import Notification
 from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
-from services.security import validate_phone_drc, normalize_phone_drc
-from services.payment_service import (
-    create_payment,
-    verify_transaction_api,
-    ValidationError,
-    AuthenticationError,
-    ShwaryAPIError,
-)
-from config import Config
+from services.payment_service import initiate_remote_payment
 
 # Configuration d'un logger si ce n'est pas déjà fait
 logger = logging.getLogger(__name__)
@@ -27,191 +16,26 @@ panier_bp = Blueprint('panier', __name__)
 @panier_bp.route("/panier", methods=["GET", "POST"])
 @login_required
 def panier():
-    """Étape 1 : Affichage du panier et choix de la méthode."""
-    if request.method == "POST":
-        method = request.form.get("payment")
-        if method in ["orange-money", "airtel-money", "mpesa"]:
-            return redirect(url_for('panier.checkout', method=method))
-        
-        flash("Cette méthode de paiement n'est pas encore disponible.", "warning")
-        return redirect(url_for('panier.panier'))
-
+    """Affiche le panier de l'utilisateur."""
     cart_items, total = Panier.get_panier(current_user.id)
+
+    if request.method == "POST":
+        payment_method = request.form.get("payment")
+        if payment_method in ["orange-money", "airtel-money", "mpesa"]:
+            # Stocker les informations essentielles dans la session
+            session['payment_info'] = {
+                'cart_total': total,
+                'method': payment_method
+            }
+            return redirect(url_for('panier.mobile_money_payment'))
+        elif payment_method == "cash":
+            # La logique pour le paiement à la livraison reste ici
+            # (ou est déplacée vers sa propre fonction)
+            pass # Mettez ici la logique pour le paiement cash
+
     user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
     return render_template("paiement.html", user=user_info, cart_items=cart_items, cart_total=total)
 
-logger = logging.getLogger(__name__)
-
-@panier_bp.route("/mobile_money")
-@panier_bp.route("/checkout")
-@login_required
-def checkout():
-    """Étape 2 : Formulaire de paiement (à reconstruire)."""
-    method = request.args.get('method')
-    user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
-    cart_items, total = Panier.get_panier(current_user.id)
-
-    if not cart_items:
-        flash("Votre panier est vide.", "warning")
-        return redirect(url_for('panier.panier'))
-
-    return render_template("mobile_money.html", method=method, user=user_info, cart_total=total)
-
-
-@panier_bp.route("/initiate_mobile_payment", methods=["POST"])
-@login_required
-def initiate_mobile_payment():
-    """
-    Étape 3 : Lancement du processus de paiement Shwary.
-    """
-    phone = request.form.get("phone")
-    if not validate_phone_drc(phone):
-        flash("Numéro de téléphone invalide (Format attendu: +243...).", "danger")
-        return redirect(url_for('panier.checkout', method=request.args.get('method')))
-
-    normalized_phone = normalize_phone_drc(phone)
-    cart_items, total = Panier.get_panier(current_user.id)
-    
-    if not cart_items:
-        flash("Votre panier est vide.", "warning")
-        return redirect(url_for('panier.panier'))
-
-    # 1. Générer une référence interne unique pour pré-enregistrer la commande
-    internal_ref = str(uuid.uuid4())
-    user_info = current_user.get_claims()
-    order_entries = []
-    for item in cart_items:
-        order_entries.append((
-            item.get('id'), user_info.get('id'), user_info.get('first_name'), user_info.get('last_name'),
-            user_info.get('adresse', 'Non spécifiée'), item.get('product_id'), item.get('product_name'),
-            item.get('product_price'), item.get('product_description'), item.get('product_image_url'),
-            item.get('seller_id'), item.get('seller_name'), item.get('quantite'), item.get('prix_total'),
-            (datetime.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
-            (datetime.now() + timedelta(days=2)).strftime('%Y-%m-%d'),
-            "16:00", 2.5, "en_attente_paiement", internal_ref
-        ))
-
-    try:
-        # 2. Insérer la commande en BDD avec le statut "en_attente_paiement"
-        Commande.create(order_entries)
-    except Exception as db_err:
-        current_app.logger.error(f"Erreur BDD lors de la pré-création de commande: {db_err}")
-        flash("Une erreur de base de données est survenue.", "danger")
-        return redirect(url_for('panier.panier'))
-
-    try:
-        # 3. Appeler le service de paiement pour initier la transaction
-        payment_response = create_payment(normalized_phone, total)
-        shwary_tx_id = payment_response.get('id')
-
-        # 4. Lier l'ID de transaction Shwary à notre commande
-        Commande.link_shwary_transaction(internal_ref, shwary_tx_id)
-
-        # 5. Rediriger vers la page d'attente avec l'ID de transaction
-        return render_template('attente_paiement.html', reference_id=shwary_tx_id)
-
-    except (ValidationError, AuthenticationError, ShwaryAPIError, Exception) as e:
-        current_app.logger.error(f"Erreur lors de l'initiation du paiement Shwary : {e}")
-        flash(f"Une erreur est survenue lors de l'initialisation du paiement : {e}", "danger")
-        # On met à jour la commande pré-créée en 'echoue' pour ne pas la laisser en attente
-        Commande.update_status(internal_ref, "echoue")
-        return redirect(url_for('panier.panier'))
-
-
-@panier_bp.route("/api/check_status/<reference_id>")
-@login_required
-def check_status(reference_id):
-    """
-    Route pour le polling JS : vérifie l'état de la commande dans la BDD.
-    """
-    try:
-        order = Commande.get_order_by_shwary_tx(reference_id)
-        if order:
-            return jsonify({"status": order['etat']})
-        return jsonify({"status": "not_found"}), 404
-    except Exception as e:
-        current_app.logger.error(f"Erreur check_status pour {reference_id}: {e}")
-        return jsonify({"status": "error"}), 500
-
-
-@panier_bp.route("/paiement_finalise")
-@login_required
-def paiement_finalise():
-    """Étape 4 : Affichage de la page de confirmation finale."""
-    user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
-    return render_template('paiement confirmé.html', user=user_info)
-
-
-@panier_bp.route('/api/callback', methods=['POST'])
-@csrf.exempt
-def payment_callback():
-    """
-    Route de callback pour le service de paiement (webhook).
-    La logique de traitement des webhooks de votre nouveau service ira ici.
-    C'est l'URL que vous avez définie dans sdk.md et que Shwary appellera.
-    """
-    data = request.get_json(silent=True)
-    current_app.logger.info(f"Webhook Shwary reçu : {data}")
-
-    # 1. Vérifications de base du payload
-    if not data or str(data.get("userId")) != str(Config.SHWARY_MERCHANT_ID):
-        current_app.logger.warning("[WEBHOOK-SECURITY] UserID du payload invalide ou payload vide.")
-        return jsonify({"error": "Unauthorized"}), 401
-
-    tx_id = data.get("id")
-    status = data.get("status")
-    amount = data.get("amount")
-
-    if not all([tx_id, status, amount]):
-        return jsonify({"error": "Payload incomplet"}), 400
-
-    # 2. Retrouver la commande dans notre BDD
-    order = Commande.get_order_by_shwary_tx(tx_id)
-    if not order:
-        current_app.logger.warning(f"[WEBHOOK-ERROR] Commande introuvable pour la transaction Shwary {tx_id}.")
-        return jsonify({"error": "Order not found"}), 404
-
-    # 3. Vérifier la cohérence du montant
-    if int(float(order['prix_total'])) != int(float(amount)):
-        current_app.logger.error(f"[WEBHOOK-SECURITY] Montant incohérent pour tx {tx_id}. Attendu: {order['prix_total']}, Reçu: {amount}")
-        return jsonify({"error": "Amount mismatch"}), 400
-
-    # 4. Double confirmation via l'API (mesure de sécurité cruciale)
-    try:
-        if not verify_transaction_api(tx_id, status, amount):
-            current_app.logger.critical(f"[WEBHOOK-SECURITY] Le statut du webhook ({status}) n'a pas pu être confirmé via l'API pour la tx {tx_id}.")
-            return jsonify({"error": "Transaction not confirmed"}), 400
-    except Exception as api_err:
-        current_app.logger.error(f"[WEBHOOK-API-ERROR] Impossible de re-vérifier la tx {tx_id} : {api_err}")
-        return jsonify({"error": "Verification failed"}), 500
-
-    # 5. Traitement en fonction du statut
-    if status == "completed":
-        if order['etat'] == 'paye': # Éviter les traitements multiples
-            return jsonify({"status": "already_processed"}), 200
-
-        Commande.update_status(tx_id, "paye")
-        buyer_id = Commande.get_buyer_id_from_ref(tx_id)
-        if buyer_id:
-            Panier.clear_panier(buyer_id)
-            Notification.create(
-                user_id=buyer_id,
-                message=f"Votre paiement pour la commande (Réf: ...{str(tx_id)[-6:]}) a été accepté.",
-                type='success'
-            )
-        current_app.logger.info(f"Paiement complété et traité pour la tx {tx_id}.")
-
-    elif status in ["failed", "cancelled"]:
-        Commande.update_status(tx_id, "echoue")
-        buyer_id = Commande.get_buyer_id_from_ref(tx_id)
-        if buyer_id:
-            Notification.create(
-                user_id=buyer_id,
-                message=f"Votre paiement pour la commande (Réf: ...{str(tx_id)[-6:]}) a échoué.",
-                type='danger')
-        current_app.logger.warning(f"Paiement échoué pour la tx {tx_id}.")
-
-    return jsonify({"status": "ok"}), 200
 
 @panier_bp.route("/modifier_article/<int:cart_id>", methods=["PATCH"])
 @login_required
@@ -244,10 +68,80 @@ def modifier_article(cart_id):
 
     return redirect(url_for('panier.panier'))
 
-@panier_bp.route("/supprimer_article/<int:cart_id>", methods=["DELETE"])
+@panier_bp.route("/supprimer_article/<int:cart_id>", methods=["POST"])
 @login_required
 def supprimer_article(cart_id):
     """Supprime définitivement un article du panier."""
     Suprimer_panier.supprimer(cart_id, current_user.id)
     # Pour une API, on renvoie une réponse JSON plutôt qu'un message flash
     return jsonify({"message": "Article retiré du panier."}), 200
+
+@panier_bp.route("/paiement/mobile", methods=["GET", "POST"])
+@login_required
+def mobile_money_payment():
+    """Affiche le formulaire pour le paiement mobile et traite la soumission."""
+    payment_info = session.get('payment_info')
+    if not payment_info:
+        flash("Session de paiement expirée ou invalide.", "warning")
+        return redirect(url_for('panier.panier'))
+        
+    # On récupère les informations de l'utilisateur pour les passer au template
+    user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
+
+    if request.method == "POST":
+        # --- RÉCUPÉRATION ET SÉCURISATION DU MONTANT ---
+        cart_total = payment_info.get('cart_total', 0)
+        # Force un montant de test minimal si le panier est vide ou trop bas pour le test de production
+        amount = float(cart_total) if float(cart_total) >= 2900 else 3000.0
+
+        # --- NORMALISATION DU NUMÉRO DE TÉLÉPHONE ---
+        phone_number = request.form.get("phone")
+        normalized_phone = "".join(filter(str.isdigit, phone_number or ""))
+
+        if normalized_phone.startswith("243"):
+            normalized_phone = "0" + normalized_phone[3:]
+
+        current_app.logger.info(f"Paiement envoyé au microservice -> Numéro: {normalized_phone}, Montant: {amount}")
+        if not phone_number:
+            flash("Le numéro de téléphone est requis.", "danger")
+            return render_template("mobile_money.html", method=payment_info.get('method'), user=user_info)
+
+        try:
+            # Appel du service de paiement externe
+            payment_response = initiate_remote_payment(phone=normalized_phone, amount=amount)
+            transaction_id = payment_response.get("transaction_id")
+
+            if not transaction_id:
+                raise Exception("La réponse du service de paiement est invalide.")
+
+            # Redirection vers la page d'attente avec l'ID de transaction
+            return redirect(url_for('panier.attente_page', transaction_id=transaction_id))
+
+        except Exception as e:
+            current_app.logger.error(f"Erreur lors de l'initiation du paiement : {e}")
+            flash("Une erreur est survenue lors de l'initiation du paiement. Veuillez réessayer.", "danger")
+
+    return render_template("mobile_money.html", method=payment_info.get('method'), user=user_info)
+
+@panier_bp.route("/paiement/attente")
+@login_required
+def attente_page():
+    """Page qui attend la confirmation du paiement mobile."""
+    transaction_id = request.args.get('transaction_id')
+    if not transaction_id:
+        flash("ID de transaction manquant.", "danger")
+        return redirect(url_for('panier.panier'))
+    
+    # Le template attente_paiement.html utilisera cet ID pour interroger le statut
+    return render_template("attente_paiement.html", transaction_id=transaction_id)
+
+@panier_bp.route("/paiement/resultat")
+@login_required
+def resultat_page():
+    """Affiche le résultat de la transaction de paiement."""
+    status = request.args.get('status')
+    tx_id = request.args.get('tx_id')
+    
+    # Pour l'instant, on passe juste les infos au template.
+    # Plus tard, on pourra créer la commande dans la DB ici.
+    return render_template("resultat_paiement.html", status=status, transaction_id=tx_id)
