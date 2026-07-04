@@ -20,28 +20,20 @@
 </div>
 
 <script>
-    // L'ID de transaction est passé par le backend lors du rendu de la page
-    const transactionId = "{{ transaction_id }}";
-    // L'URL du microservice est récupérée depuis la configuration Flask
-    const microserviceBaseUrl = "{{ config.PAYMENT_MICROSERVICE_URL }}".replace(/\/$/, "");
+    const params = new URLSearchParams(window.location.search);
+    const transactionId = params.get('tid');
 
     if (!transactionId) {
         document.body.innerHTML = '<h1>Erreur: ID de transaction manquant.</h1>';
     } else {
         const pollStatus = async () => {
             try {
-                // On interroge directement l'endpoint du microservice
-                const response = await fetch(`${microserviceBaseUrl}/api/transactions/${transactionId}`); // Assurez-vous que microserviceBaseUrl est bien défini dans votre config Flask
+                const response = await fetch(`/api/transactions/${transactionId}`);
                 const data = await response.json();
 
-                if (data.status === 'completed' || data.status === 'paid') { // 'paid' pour la compatibilité
+                if (data.status === 'completed' || data.status === 'failed') {
                     clearInterval(pollingInterval);
-                    // Redirection vers la page de résultat avec le statut de succès
-                    window.location.href = "{{ url_for('panier.resultat_page') }}?status=success&tx_id=" + transactionId;
-                } else if (data.status === 'failed' || data.status === 'cancelled') {
-                    clearInterval(pollingInterval);
-                    // Redirection vers la page de résultat avec le statut d'échec
-                    window.location.href = "{{ url_for('panier.resultat_page') }}?status=failed&tx_id=" + transactionId;
+                    window.location.href = `/resultat?status=${data.status}&tid=${transactionId}`;
                 }
             } catch (error) {
                 console.error("Erreur lors de la vérification du statut:", error);

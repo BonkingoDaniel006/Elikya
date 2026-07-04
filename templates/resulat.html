@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultat du Paiement</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
+        .success { color: green; }
+        .failed { color: red; }
+        a { display: inline-block; margin-top: 2rem; padding: 0.5rem 1rem; background-color: #007bff; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div id="result-container">
+    <!-- Le contenu sera injecté par JavaScript -->
+</div>
+
+<script>
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const transactionId = params.get('tid');
+    const container = document.getElementById('result-container');
+
+    if (status === 'completed') {
+        container.innerHTML = `<h1 class="success">Paiement Réussi !</h1><p>Votre transaction ${transactionId} a été complétée avec succès.</p>`;
+    } else if (status === 'failed') {
+        container.innerHTML = `<h1 class="failed">Échec du Paiement</h1><p>Votre transaction ${transactionId} a échoué. Veuillez réessayer.</p>`;
+    } else {
+        container.innerHTML = `<h1>Statut Inconnu</h1><p>Impossible de déterminer le résultat de la transaction.</p>`;
+    }
+    container.innerHTML += '<a href="/">Effectuer un autre paiement</a>';
+</script>
+
+</body>
+</html>

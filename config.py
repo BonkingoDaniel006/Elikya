@@ -15,6 +15,7 @@ class Config:
     SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True').lower() in ('true', '1', 't')
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
+    CSRF_MAX_AGE_SECONDS = 3600 # Durée de vie du token CSRF (1 heure)
  
     # --- Configuration Redis pour le rate limiting et les sessions ---
     REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
@@ -35,15 +36,5 @@ class Config:
     MAIL_USERNAME = os.environ.get("PROV_EMAIL")
     MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD")
 
-    # --- Configuration Shwary (basée sur sdk.md) ---
-    # 1. Identifiant du marchand
-    SHWARY_MERCHANT_ID = os.getenv("SHWARY_MERCHANT_ID", "0e0ca537-1d67-414d-8f13-3238be68766e")
 
-    # 2. Clé secrète du marchand
-    SHWARY_MERCHANT_KEY = os.getenv("SHWARY_MERCHANT_KEY", "shwary_d68f0f5d-e7d9-4fb6-ab1d-36f480d0ec9f")
-
-    # 3. URL de callback que Shwary appellera
-    SHWARY_CALLBACK_URL = os.getenv("SHWARY_CALLBACK_URL", "https://essaie-shwary-1.onrender.com/api/webhooks/shwary")
-
-    # 4. Mode Sandbox (désactivé comme dans votre exemple)
-    SHWARY_SANDBOX = os.getenv("SHWARY_SANDBOX", "false").lower() in ("1", "true", "yes")
+    PAYMENT_MICROSERVICE_URL = os.getenv('PAYMENT_MICROSERVICE_URL')

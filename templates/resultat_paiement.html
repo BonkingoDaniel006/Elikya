@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résultat du Paiement</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; text-align: center; }
+        .container { padding: 20px; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .success { background-color: #e8f5e9; color: #2e7d32; }
+        .failed { background-color: #ffebee; color: #c62828; }
+        a { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #4b0082; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container {% if status == 'success' %}success{% else %}failed{% endif %}">
+    {% if status == 'success' %}
+        <h1>Paiement Réussi !</h1>
+        <p>Votre commande a été traitée avec succès.</p>
+        <p><small>ID de transaction : {{ transaction_id }}</small></p>
+    {% else %}
+        <h1>Échec du Paiement</h1>
+        <p>La transaction n'a pas pu être complétée. Aucun montant n'a été débité.</p>
+        <p><small>ID de transaction : {{ transaction_id }}</small></p>
+    {% endif %}
+    <a href="{{ url_for('auth.index') }}">Retour à l'accueil</a>
+</div>
+
+</body>
+</html>
