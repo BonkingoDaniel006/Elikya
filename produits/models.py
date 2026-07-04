@@ -14,6 +14,8 @@ class Details_produit():
         self.image_url = image_url
         self.seller_name = seller_name
 
+
+
     def get_claims(self):
         return {
             "id": self.id,
