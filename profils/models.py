@@ -193,3 +193,25 @@ class Seller ():
         cursor.close()
         conn.close()
         return produits
+    
+    @classmethod
+    def get_commandes(cls, user_id):
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM commande WHERE seller_id = %s", (user_id,))
+        commandes = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return commandes
+    
+    @classmethod
+    def get_for_user(cls, user_id):
+        """Récupère toutes les notifications pour un utilisateur, triées par date."""
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        query = "SELECT * FROM notifications WHERE user_id = %s ORDER BY created_at DESC"
+        cursor.execute(query, (user_id,))
+        notifications = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return notifications

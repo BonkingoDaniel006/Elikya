@@ -3,9 +3,9 @@ from flask_login import login_user, logout_user, login_required, current_user
 from ext import bcrypt, mail, get_db_connection
 from auth.models import User
 from produits.models import Add_panier
-from produits.models import Details_produit
+from produits.models import Details_produit, Produits
 from produits.models import Ajouter_produit
-from produits.models import Suprimer_produit
+from produits.models import Suprimer_produit, Produits
 from produits.models import Modifier_produit
 
 
@@ -183,3 +183,15 @@ def modifier_produit(product_id):
         flash("Mot de passe incorrect. Modification annulée.", "danger")
 
     return redirect(url_for('seller.seller_dashboard'))
+
+
+@produit_bp.route("/search")
+def search():
+    """Gère la recherche de produits."""
+    query = request.args.get('q', '').strip()
+    if not query:
+        return redirect(url_for('auth.index'))
+
+    produits_trouves = Produits.search(query)
+    user_info = current_user.get_claims() if current_user.is_authenticated else None
+    return render_template("search_results.html", produits=produits_trouves, query=query, user=user_info)
