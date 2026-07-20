@@ -63,8 +63,10 @@ seller_bp = Blueprint('seller', __name__, template_folder='.')
 @login_required
 def seller_dashboard():
     produits = Seller.get_produits(current_user.id)
+    commandes = Seller.get_commandes(current_user.id)
+    notifications = Seller.get_for_user(current_user.id)
     seller_obj = Seller.get_by_id(current_user.id)
     
 
     user_info = seller_obj.get_claims() if seller_obj else {}
-    return render_template("seller_dash.html", user=user_info, produits=produits)
+    return render_template("seller_dash.html", user=user_info, produits=produits, commandes=commandes, notifications=notifications)

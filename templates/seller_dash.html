@@ -262,6 +262,7 @@
                   <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Actif</span>
                 </td>
                 <td class="px-6 py-4 text-right">
+                  <button type="button" onclick="showViewModal('{{ produit.id }}')" class="font-medium text-blue-600 hover:underline px-2">Voir</button>
                   <button type="button" onclick="showUpdateModal('{{ produit.id }}')" class="font-medium text-purple-600 hover:underline px-2">Modifier</button>
                   <button type="button" onclick="showModal('{{ produit.id }}')" class="font-medium text-pink-600 hover:underline px-2">Supprimer</button>
                 </td>
@@ -282,9 +283,27 @@
           </table>
         </div>
 
+        <!-- Modale pour VOIR le produit -->
+        <div id="viewProductModal" class="modal-overlay">
+          <div class="modal-box max-w-md max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold text-purple-800 mb-4" id="viewProductName">Nom du produit</h3>
+            <div class="space-y-4 text-left">
+              <img id="viewProductImage" src="" alt="Image du produit" class="w-full h-48 object-cover rounded-lg mb-4">
+              <div>
+                <p class="text-sm text-gray-500">Prix</p>
+                <p class="font-semibold text-lg text-pink-600" id="viewProductPrice">0.00 $</p>
+              </div>
+              <div>
+                <p class="text-sm text-gray-500">Description</p>
+                <p class="text-gray-700" id="viewProductDescription">Description du produit...</p>
+              </div>
+            </div>
+            <button type="button" onclick="closeViewModal()" class="mt-6 w-full btn-modal btn-modal-cancel">Fermer</button>
+          </div>
+        </div>
 
         <div id="deleteConfirmModal" class="modal-overlay">
-          <div class="modal-box">
+          <div class="modal-box max-h-[90vh] overflow-y-auto">
             <h3 id="modalTitle" style="color: #4b0082; margin-top: 0;">Confirmer la suppression</h3>
             <p id="modalText" style="color: #666; line-height: 1.5;">Voulez-vous vraiment supprimer cet article ? Cette action est irréversible.</p>
         
@@ -309,7 +328,7 @@
         </div>
 
           <div id="updateProductModal" class="modal-overlay">
-            <div class="modal-box">
+            <div class="modal-box max-h-[90vh] overflow-y-auto">
               <h3 style="color: #4b0082; margin-top: 0;">Modifier l'article</h3>
               <form id="updateForm" method="POST" enctype="multipart/form-data" style="margin-top:20px;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -339,6 +358,164 @@
       </section>
 
       <!-- ============================================================ -->
+      <!-- ONGLET 3 : COMMANDES -->
+      <!-- ============================================================ -->
+      <section id="tab-orders" class="tab-panel space-y-6">
+        <div>
+          <h2 class="text-xl font-bold text-slate-800">Gestion des commandes</h2>
+          <p class="text-sm text-slate-500">Suivez et gérez les commandes passées par vos clients.</p>
+        </div>
+        <div class="bg-white rounded-xl shadow-card overflow-x-auto">
+          <table class="w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+              <tr>
+                <th scope="col" class="px-6 py-3">Commande</th>
+                <th scope="col" class="px-6 py-3">Client</th>
+                <th scope="col" class="px-6 py-3">Date</th>
+                <th scope="col" class="px-6 py-3">Total</th>
+                <th scope="col" class="px-6 py-3">Statut</th>
+                <th scope="col" class="px-6 py-3"><span class="sr-only">Actions</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Commande 1 -->
+              <tr class="bg-white border-b hover:bg-gray-50"
+                  data-order-id="#1024"
+                  data-order-client="John Doe"
+                  data-order-date="20/07/2026"
+                  data-order-total="1250.00 $"
+                  data-order-status="En attente"
+                  data-order-status-class="bg-yellow-100 text-yellow-800"
+                  data-order-items='[{"name": "iPhone 15 Pro", "qty": 1, "price": "1250.00 $"}]'>
+                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">#1024</th>
+                <td class="px-6 py-4">John Doe</td>
+                <td class="px-6 py-4">20/07/2026</td>
+                <td class="px-6 py-4 font-semibold">1250.00 $</td>
+                <td class="px-6 py-4">
+                  <span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">En attente</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <button type="button" onclick="showOrderModal(this.closest('tr'))" class="font-medium text-purple-600 hover:underline">Voir</button>
+                </td>
+              </tr>
+              <!-- Commande 2 -->
+              <tr class="bg-white border-b hover:bg-gray-50"
+                  data-order-id="#1023"
+                  data-order-client="Marie Dupont"
+                  data-order-date="19/07/2026"
+                  data-order-total="89.99 $"
+                  data-order-status="Expédiée"
+                  data-order-status-class="bg-blue-100 text-blue-800"
+                  data-order-items='[{"name": "Casque Gamer RGB", "qty": 1, "price": "89.99 $"}]'>
+                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">#1023</th>
+                <td class="px-6 py-4">Marie Dupont</td>
+                <td class="px-6 py-4">19/07/2026</td>
+                <td class="px-6 py-4 font-semibold">89.99 $</td>
+                <td class="px-6 py-4">
+                  <span class="bg-blue-100 text-blue-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Expédiée</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <button type="button" onclick="showOrderModal(this.closest('tr'))" class="font-medium text-purple-600 hover:underline">Voir</button>
+                </td>
+              </tr>
+              <!-- Commande 3 -->
+              <tr class="bg-white border-b hover:bg-gray-50"
+                  data-order-id="#1022"
+                  data-order-client="Alain Martin"
+                  data-order-date="18/07/2026"
+                  data-order-total="240.50 $"
+                  data-order-status="Livrée"
+                  data-order-status-class="bg-green-100 text-green-800"
+                  data-order-items='[{"name": "Playstation 5", "qty": 1, "price": "200.00 $"}, {"name": "Jeu Spider-Man 2", "qty": 1, "price": "40.50 $"}]'>
+                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">#1022</th>
+                <td class="px-6 py-4">Alain Martin</td>
+                <td class="px-6 py-4">18/07/2026</td>
+                <td class="px-6 py-4 font-semibold">240.50 $</td>
+                <td class="px-6 py-4">
+                  <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Livrée</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <button type="button" onclick="showOrderModal(this.closest('tr'))" class="font-medium text-purple-600 hover:underline">Voir</button>
+                </td>
+              </tr>
+              <!-- Commande 4 -->
+              <tr class="bg-white hover:bg-gray-50"
+                  data-order-id="#1021"
+                  data-order-client="Sophie Dubois"
+                  data-order-date="17/07/2026"
+                  data-order-total="45.00 $"
+                  data-order-status="Annulée"
+                  data-order-status-class="bg-red-100 text-red-800"
+                  data-order-items='[{"name": "Chargeur USB-C", "qty": 2, "price": "22.50 $"}]'>
+                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">#1021</th>
+                <td class="px-6 py-4">Sophie Dubois</td>
+                <td class="px-6 py-4">17/07/2026</td>
+                <td class="px-6 py-4 font-semibold">45.00 $</td>
+                <td class="px-6 py-4">
+                  <span class="bg-red-100 text-red-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Annulée</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <button type="button" onclick="showOrderModal(this.closest('tr'))" class="font-medium text-purple-600 hover:underline">Voir</button>
+                </td>
+              </tr>
+              {% for commande in commandes %}
+              <tr class="bg-white border-b hover:bg-gray-50"
+                  data-order-id="#{{commande.id}}"
+                  data-order-client="{{commande.buyer_first_name}} {{commande.buyer_last_name}}"
+                  data-order-date="{{commande.date_creation}}"
+                  data-order-total="{{ "%.2f"|format(commande.prix_total|float) }} $"
+                  data-order-status="{{commande.etat}}"
+                  data-order-status-class="bg-yellow-100 text-yellow-800"
+                  data-order-items='[{"name": "{{ commande.product_name }}", "qty": {{ commande.quantite }}, "price": "{{ "%.2f"|format(commande.product_price|float) }} $", "image_url": "{{ commande.product_image_url }}"}]'>
+                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"># {{commande.id}}</th>
+                <td class="px-6 py-4">{{commande.buyer_first_name}} {{commande.buyer_last_name}}</td>
+                <td class="px-6 py-4">{{commande.date_creation}}</td>
+                <td class="px-6 py-4 font-semibold">{{ "%.2f"|format(commande.prix_total|float) }} $</td>
+                <td class="px-6 py-4">
+                  <span class="bg-yellow-100 text-yellow-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">{{commande.etat}}</span>
+                </td>
+                <td class="px-6 py-4 text-right">
+                  <button type="button" onclick="showOrderModal(this.closest('tr'))" class="font-medium text-purple-600 hover:underline">Voir</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Modale pour VOIR la commande -->
+        <div id="viewOrderModal" class="modal-overlay">
+          <div class="modal-box max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-2">
+              <div>
+                <h3 class="text-xl font-bold text-purple-800" id="viewOrderId">Commande #0000</h3>
+                <p class="text-sm text-gray-500">Détails de la commande</p>
+              </div>
+              <span id="viewOrderStatus" class="text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Statut</span>
+            </div>
+            
+            <div class="space-y-4 text-left mt-6">
+              <div class="grid grid-cols-2 gap-4 text-sm">
+                <div><p class="text-gray-500">Client</p><p class="font-semibold" id="viewOrderClient"></p></div>
+                <div><p class="text-gray-500">Date</p><p class="font-semibold" id="viewOrderDate"></p></div>
+              </div>
+              
+              <div>
+                <p class="text-sm text-gray-500 mb-2">Articles commandés</p>
+                <div id="viewOrderItems" class="space-y-3 border-t border-b border-gray-200 py-3">
+                  <!-- Les articles seront injectés ici par JS -->
+                </div>
+              </div>
+
+              <div class="text-right font-bold text-lg"><span class="text-gray-500 font-medium">Total : </span><span id="viewOrderTotal"></span></div>
+
+            </div>
+            <button type="button" onclick="closeOrderModal()" class="mt-6 w-full btn-modal btn-modal-cancel">Fermer</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================ -->
       <!-- ONGLET 5 : NOTIFICATIONS -->
       <!-- ============================================================ -->
       <section id="tab-notifications" class="tab-panel space-y-6">
@@ -346,8 +523,101 @@
           <h2 class="text-xl font-bold text-slate-800">Notifications</h2>
           <p class="text-sm text-slate-500">Consultez ici vos dernières alertes.</p>
         </div>
-        <div class="bg-white rounded-xl p-5 sm:p-6 shadow-card">
-          <p class="text-center text-slate-500 py-12">La section des notifications sera affichée ici.</p>
+        <div class="bg-white rounded-xl shadow-card">
+          {% if notifications %}
+            <div class="p-4 sm:p-6 border-b border-gray-200 flex justify-between items-center">
+              <h3 class="font-semibold text-slate-700">Boîte de réception</h3>
+              <form action="{{ url_for('notification.mark_all_as_read') }}" method="POST">
+                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                 <button type="submit" class="text-sm font-medium text-purple-600 hover:underline">Tout marquer comme lu</button>
+              </form>
+            </div>
+          {% endif %}
+          <div class="divide-y divide-gray-200">
+            {% for notif in notifications %}
+            <div class="p-4 sm:p-6 flex gap-4 items-start {{ 'bg-purple-50/50' if not notif.is_read else '' }}"
+                 data-notif-id="{{ notif.id }}"
+                 data-notif-title="{{ notif.title }}"
+                 data-notif-content="{{ notif.content }}"
+                 data-notif-date="{{ notif.created_at.strftime('%d %b %Y, %H:%M') }}"
+                 data-notif-type="{{ notif.type }}"
+                 onclick="showNotificationModal(this)">
+              <!-- Icône -->
+              <div class="notif-icon w-10 h-10 rounded-full flex items-center justify-center shrink-0
+                {% if notif.type == 'order' %} bg-pink-100 text-pink-600
+                {% elif notif.type == 'message' %} bg-blue-100 text-blue-600
+                {% else %} bg-green-100 text-green-600 {% endif %}">
+                <i class="fa-solid 
+                  {% if notif.type == 'order' %} fa-receipt
+                  {% elif notif.type == 'message' %} fa-comment-dots
+                  {% else %} fa-info-circle {% endif %}"></i>
+              </div>
+              <!-- Contenu -->
+              <div class="flex-1 cursor-pointer">
+                <div class="flex justify-between items-center">
+                  <p class="font-semibold text-slate-800">{{ notif.title }}</p>
+                  <span class="text-xs text-slate-400">{{ notif.created_at.strftime('%d %b, %H:%M') }}</span>
+                </div>
+                <p class="text-sm text-slate-600 mt-1">{{ notif.content }}</p>
+                <!-- Actions -->
+                <div class="mt-2 flex items-center gap-4" onclick="event.stopPropagation()">
+                  {% if not notif.is_read %}
+                  <form action="{{ url_for('notification.mark_as_read', notification_id=notif.id) }}" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="text-xs font-semibold text-purple-600 hover:underline">Marquer comme lu</button>
+                  </form>
+                  {% endif %}
+                  <button type="button" onclick="showDeleteNotificationModal('{{ notif.id }}')" class="text-xs font-medium text-pink-500 hover:underline">Supprimer</button>
+                </div>
+              </div>
+              <!-- Indicateur non lu -->
+              {% if not notif.is_read %}
+              <div class="w-2.5 h-2.5 bg-pink-500 rounded-full shrink-0 mt-1.5" title="Non lu"></div>
+              {% endif %}
+            </div>
+            {% else %}
+            <!-- Aucune notification -->
+            <div class="text-center py-16 px-6">
+              <div class="flex flex-col items-center">
+                <i class="fa-regular fa-bell-slash text-4xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 font-medium">Aucune notification pour le moment.</p>
+                <p class="text-gray-400 text-sm">Nous vous préviendrons dès qu'il y aura du nouveau.</p>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Modale pour VOIR la notification -->
+        <div id="viewNotificationModal" class="modal-overlay">
+          <div class="modal-box max-w-md max-h-[90vh] overflow-y-auto">
+            <div class="flex items-start gap-4">
+              <div id="viewNotifIcon" class="w-10 h-10 rounded-full flex items-center justify-center shrink-0">
+                <i id="viewNotifIconI" class="fa-solid"></i>
+              </div>
+              <div class="flex-1 text-left">
+                <h3 class="text-lg font-bold text-purple-800" id="viewNotifTitle">Titre</h3>
+                <p class="text-xs text-gray-400 mb-4" id="viewNotifDate">Date</p>
+                <p class="text-gray-700" id="viewNotifContent">Contenu...</p>
+              </div>
+            </div>
+            <button type="button" onclick="closeNotificationModal()" class="mt-6 w-full btn-modal btn-modal-cancel">Fermer</button>
+          </div>
+        </div>
+
+        <!-- Modale pour SUPPRIMER la notification -->
+        <div id="deleteNotificationModal" class="modal-overlay">
+          <div class="modal-box">
+            <h3 style="color: #4b0082; margin-top: 0;">Confirmer la suppression</h3>
+            <p style="color: #666; line-height: 1.5;">Voulez-vous vraiment supprimer cette notification ?</p>
+            <form id="deleteNotifForm" method="POST" style="margin-top:20px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div class="modal-actions">
+                <button type="button" onclick="closeDeleteNotificationModal()" class="btn-modal btn-modal-cancel">Annuler</button>
+                <button type="submit" class="btn-modal btn-modal-confirm">Oui, supprimer</button>
+              </div>
+            </form>
+          </div>
         </div>
       </section>
 
@@ -486,6 +756,101 @@ function closeUpdateModal() {
     const url = new URL(window.location);
     url.searchParams.delete('update_product');
     window.history.replaceState({}, '', url);
+}
+
+// --- MODALE POUR VOIR LE PRODUIT ---
+
+function showViewModal(id) {
+    const modal = document.getElementById('viewProductModal');
+    const productRow = document.querySelector(`tr[data-id="${id}"]`);
+    
+    if (productRow) {
+        // On récupère l'URL de l'image directement depuis la balise <img> dans la ligne
+        const imageUrl = productRow.querySelector('img').src;
+
+        document.getElementById('viewProductImage').src = imageUrl;
+        document.getElementById('viewProductName').innerText = productRow.dataset.name || 'N/A';
+        document.getElementById('viewProductPrice').innerText = (productRow.dataset.price || '0.00') + ' $';
+        document.getElementById('viewProductDescription').innerText = productRow.dataset.description || 'Aucune description.';
+        modal.style.display = 'block';
+    }
+}
+
+function closeViewModal() {
+    document.getElementById('viewProductModal').style.display = 'none';
+}
+
+// --- MODALE POUR VOIR LA COMMANDE ---
+
+function showOrderModal(orderRow) {
+    const modal = document.getElementById('viewOrderModal');
+    if (!orderRow) return;
+
+    // Remplissage des informations de base
+    document.getElementById('viewOrderId').innerText = orderRow.dataset.orderId || '#N/A';
+    document.getElementById('viewOrderClient').innerText = orderRow.dataset.orderClient || 'N/A';
+    document.getElementById('viewOrderDate').innerText = orderRow.dataset.orderDate || 'N/A';
+    document.getElementById('viewOrderTotal').innerText = orderRow.dataset.orderTotal || '0.00 $';
+
+    // Mise à jour du statut avec la bonne couleur
+    const statusBadge = document.getElementById('viewOrderStatus');
+    statusBadge.innerText = orderRow.dataset.orderStatus || 'Inconnu';
+    statusBadge.className = 'text-xs font-medium me-2 px-2.5 py-0.5 rounded-full ' + (orderRow.dataset.orderStatusClass || 'bg-gray-100 text-gray-800');
+
+    // Remplissage de la liste des articles
+    const itemsContainer = document.getElementById('viewOrderItems');
+    itemsContainer.innerHTML = ''; // Vider la liste précédente
+    try {
+        const items = JSON.parse(orderRow.dataset.orderItems || '[]');
+        if (items.length === 0) {
+            itemsContainer.innerHTML = '<p class="text-gray-400 text-sm">Aucun article détaillé pour cette commande.</p>';
+        }
+        items.forEach(item => {
+            itemsContainer.innerHTML += `<div class="flex items-center gap-4 text-sm"><img src="${item.image_url || '/static/profils/logo.png'}" alt="${item.name}" class="w-12 h-12 rounded-md object-cover bg-gray-100"><div class="flex-1"><p class="font-semibold text-gray-800">${item.name}</p><p class="text-gray-500">${item.qty} x ${item.price}</p></div></div>`;
+        });
+    } catch (e) { console.error("Erreur parsing JSON items:", e); }
+
+    modal.style.display = 'block';
+}
+
+function closeOrderModal() {
+    document.getElementById('viewOrderModal').style.display = 'none';
+}
+
+// --- MODALES POUR LES NOTIFICATIONS ---
+
+function showNotificationModal(notifElement) {
+    const modal = document.getElementById('viewNotificationModal');
+    if (!notifElement) return;
+
+    // Remplissage du contenu
+    document.getElementById('viewNotifTitle').innerText = notifElement.dataset.notifTitle;
+    document.getElementById('viewNotifContent').innerText = notifElement.dataset.notifContent;
+    document.getElementById('viewNotifDate').innerText = notifElement.dataset.notifDate;
+
+    // Copie de l'icône et de son style
+    const originalIcon = notifElement.querySelector('.notif-icon');
+    const modalIcon = document.getElementById('viewNotifIcon');
+    const modalIconI = document.getElementById('viewNotifIconI');
+    if(originalIcon) {
+      modalIcon.className = originalIcon.className; // Copie toutes les classes (bg, text, etc.)
+      modalIconI.className = originalIcon.querySelector('i').className; // Copie la classe de l'icône (fa-receipt, etc.)
+    }
+
+    modal.style.display = 'block';
+}
+
+function closeNotificationModal() {
+    document.getElementById('viewNotificationModal').style.display = 'none';
+}
+
+function showDeleteNotificationModal(id) {
+    document.getElementById('deleteNotifForm').action = `/notifications/delete/${id}`;
+    document.getElementById('deleteNotificationModal').style.display = 'block';
+}
+
+function closeDeleteNotificationModal() {
+    document.getElementById('deleteNotificationModal').style.display = 'none';
 }
 </script>
 <script src="{{ url_for('static', filename='js/seller_dash.js') }}" defer></script>

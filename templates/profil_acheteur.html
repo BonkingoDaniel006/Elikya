@@ -16,7 +16,7 @@
       <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
     </div>
     <div class="search-bar">
-      <input type="text" placeholder="Rechercher un produit..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+      <input type="search" class="global-search-input" placeholder="Rechercher un produit..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
     </div>
 
     <label for="menu-toggle" class="hamburger">☰</label>
@@ -29,7 +29,7 @@
       <li><a href="{{ url_for('auth.index') }}" class="nav-item">
         <i class="fa-solid fa-house nav-icon"></i> Accueil
       </a></li>
-      <li><a href="{{ url_for('notification.notifications') }}" class="nav-item">
+      <li><a href="{{ url_for('seller.seller_dashboard', tab='notifications') }}" class="nav-item">
         <i class="fa-solid fa-bell nav-icon"></i> Notifications
       </a></li>
       <li><a href="{{ url_for('panier.panier') }}" class="nav-item">
@@ -201,6 +201,8 @@ function closeEditProfileModal() {
     document.getElementById('editNewPassword').value = '';
 }
 </script>
+
+<script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
 
 <footer><a href="{{ url_for('auth.deconnexion') }}" class="secondary">Se déconnecter</a></footer>
 

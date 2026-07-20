@@ -1,11 +1,12 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
+import random
 import time
 from redis.exceptions import ConnectionError as RedisConnectionError
 from ext import bcrypt
-from ext import get_redis_client
-from auth.models import User
-from feed.models import Produits
+from ext import get_redis_client, get_db_connection
+from auth.models import User # Gardez cette ligne
+from produits.models import Produits # MODIFICATION: Importer depuis produits.models
 from auth.services import process_registration, process_otp_validation
 
 auth_bp = Blueprint('auth', __name__)
@@ -131,7 +132,17 @@ def connexion():
 @auth_bp.route('/index')
 @login_required
 def index():
-    produits = Produits.get_all()
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT p.*, u.nom_boutique 
+        FROM produits p 
+        JOIN users u ON p.seller_id = u.id
+        """)
+    produits = cursor.fetchall()
+    random.shuffle(produits)
+    cursor.close()
+    conn.close()
     claims = current_user.get_claims()
     
     return render_template(

@@ -2,8 +2,29 @@ from ext import get_db_connection
 import os
 import uuid
 from werkzeug.datastructures import FileStorage
+import random
 
 
+class Produits():
+    def __init__(self, id, seller_id, name, price, description, image_url):
+        self.id = id
+        self.seller_id = seller_id
+        self.name = name
+        self.price = price
+        self.description = description
+        self.image_url = image_url
+
+    @classmethod
+    def search(cls, query):
+        """Recherche des produits par nom ou description."""
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        search_query = f"%{query}%"
+        cursor.execute("SELECT p.*, u.nom_boutique FROM produits p JOIN users u ON p.seller_id = u.id WHERE p.name LIKE %s OR p.description LIKE %s", (search_query, search_query))
+        produits = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return produits
 class Details_produit():
     def __init__(self, id, seller_id, name, price, description, image_url, seller_name=None):
         self.id = id
