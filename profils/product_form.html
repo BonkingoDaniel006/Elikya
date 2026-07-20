@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Produit</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/seller_dash.css">
+</head>
+<body>
+
+    <header>
+        <h1>Gestion de Produit</h1>
+        <nav>
+            <a href="seller_dash.html">Retour au tableau de bord</a>
+        </nav>
+    </header>
+
+    <main class="dashboard-container">
+        <section class="product-form-container card">
+            <h2 id="form-title">Ajouter un nouveau produit</h2>
+            <form id="product-form">
+                <input type="hidden" id="product-id">
+
+                <div class="form-group">
+                    <label for="product-name">Nom du produit</label>
+                    <input type="text" id="product-name" name="name" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-description">Description</label>
+                    <textarea id="product-description" name="description" rows="4" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="product-price">Prix (€)</label>
+                    <input type="number" id="product-price" name="price" step="0.01" min="0" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Enregistrer le produit</button>
+            </form>
+        </section>
+    </main>
+
+    <script src="js/seller_dash.js"></script>
+</body>
+</html>

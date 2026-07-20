@@ -55,7 +55,7 @@ def profil_acheteur():
     return render_template("profil_acheteur.html", user=user_info, cart_items=cart_items, cart_total=total)
 
 
-seller_bp = Blueprint('seller', __name__)
+seller_bp = Blueprint('seller', __name__, template_folder='.')
 
 
 
@@ -67,4 +67,4 @@ def seller_dashboard():
     
 
     user_info = seller_obj.get_claims() if seller_obj else {}
-    return render_template("profil_vendeur.html", user=user_info, produits=produits)
+    return render_template("seller_dash.html", user=user_info, produits=produits)
