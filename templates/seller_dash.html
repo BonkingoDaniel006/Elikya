@@ -240,7 +240,12 @@
             </thead>
             <tbody>
               {% for produit in produits %}
-              <tr class="bg-white border-b hover:bg-gray-50">
+              <tr class="bg-white border-b hover:bg-gray-50" 
+                  data-id="{{ produit.id }}"
+                  data-name="{{ produit.name }}"
+                  data-price="{{ "%.2f"|format(produit.price|float) }}"
+                  data-description="{{ produit.description }}"
+                  >
                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                   <div class="flex items-center gap-3">
                     <img src="{{ produit.image_url }}" alt="{{ produit.name }}" class="w-10 h-10 rounded-md object-cover">
@@ -257,8 +262,8 @@
                   <span class="bg-green-100 text-green-800 text-xs font-medium me-2 px-2.5 py-0.5 rounded-full">Actif</span>
                 </td>
                 <td class="px-6 py-4 text-right">
-                  <a href="{{ url_for('produit.modifier_produit', product_id=produit.id) }}" class="font-medium text-purple-600 hover:underline px-2">Modifier</a>
-                  <a href="{{ url_for('produit.suprimer_produit', product_id=produit.id) }}" class="font-medium text-pink-600 hover:underline px-2">Supprimer</a>
+                  <button type="button" onclick="showUpdateModal('{{ produit.id }}')" class="font-medium text-purple-600 hover:underline px-2">Modifier</button>
+                  <button type="button" onclick="showModal('{{ produit.id }}')" class="font-medium text-pink-600 hover:underline px-2">Supprimer</button>
                 </td>
               </tr>
               {% else %}
@@ -276,6 +281,61 @@
             </tbody>
           </table>
         </div>
+
+
+        <div id="deleteConfirmModal" class="modal-overlay">
+          <div class="modal-box">
+            <h3 id="modalTitle" style="color: #4b0082; margin-top: 0;">Confirmer la suppression</h3>
+            <p id="modalText" style="color: #666; line-height: 1.5;">Voulez-vous vraiment supprimer cet article ? Cette action est irréversible.</p>
+        
+          <!-- Formulaire pour le mot de passe (Étape 2) -->
+            <form id="deleteForm" method="POST" style="margin-top:20px;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> <!-- CHAMP CSRF AJOUTÉ -->
+            
+              <div id="passwordStep" style="display:none;">
+                  <input type="password" name="password" id="deletePassword" placeholder="Entrez votre mot de passe" class="modal-input" required>
+              </div>
+
+              <div class="modal-actions">
+                  <button type="button" onclick="closeModal()" class="btn-modal btn-modal-cancel">Annuler</button>
+                
+                  <!-- Ce bouton change de rôle selon l'étape -->
+                  <button type="button" id="confirmBtn" class="btn-modal btn-modal-confirm">
+                      Oui, supprimer
+                  </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+          <div id="updateProductModal" class="modal-overlay">
+            <div class="modal-box">
+              <h3 style="color: #4b0082; margin-top: 0;">Modifier l'article</h3>
+              <form id="updateForm" method="POST" enctype="multipart/form-data" style="margin-top:20px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              
+                <div id="updateInfoStep">
+                    <input type="text" name="nom_produit" id="updateName" placeholder="Nom du produit" class="modal-input" required>
+                    <input type="number" step="0.01" name="prix" id="updatePrice" placeholder="Prix ($)" class="modal-input" required>
+                    <textarea name="description" id="updateDesc" placeholder="Description" class="modal-input" style="height: 100px; resize: none;" required></textarea>
+                    <label style="display: block; text-align: left; margin-left: 10px; font-size: 0.8rem; color: #666;">Changer l'image (optionnel) :</label>
+                    <input type="file" name="image_url" id="updateImage" class="modal-input">
+                </div>
+
+                <div id="updatePasswordStep" style="display:none;">
+                  <p id="updateModalText" style="color: #666; font-size: 0.9rem;">Sécurité : Veuillez confirmer votre identité pour enregistrer les modifications.</p>
+                  <input type="password" name="password" id="updatePassword" placeholder="Entrez votre mot de passe" class="modal-input" required>
+                </div>
+
+                <div class="modal-actions">
+                  <button type="button" onclick="closeUpdateModal()" class="btn-modal btn-modal-cancel">Annuler</button>
+                  <button type="button" id="updateConfirmBtn" class="btn-modal btn-modal-confirm">
+                      Suivant
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
       </section>
 
       <!-- ============================================================ -->
@@ -301,6 +361,133 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js" defer></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    // Gestion de la suppression via URL
+    const productId = urlParams.get('confirm_delete');
+    if (productId) {
+        showModal(productId);
+    }
+
+    // Gestion de la modification via URL
+    const updateId = urlParams.get('update_product');
+    if (updateId) {
+        showUpdateModal(updateId);
+    }
+});
+
+let currentProductId = null;
+
+
+function showModal(id) {
+    currentProductId = id;
+    const modal = document.getElementById('deleteConfirmModal');
+    const passwordStep = document.getElementById('passwordStep');
+    const modalText = document.getElementById('modalText');
+    const confirmBtn = document.getElementById('confirmBtn');
+
+    modal.style.display = 'block';
+    
+    // Réinitialisation de la modale à l'étape 1
+    passwordStep.style.display = 'none';
+    modalText.innerText = "Voulez-vous vraiment supprimer cet article ? Cette action est irréversible.";
+    
+    confirmBtn.innerText = "Oui, supprimer";
+    confirmBtn.type = "button";
+    
+    confirmBtn.onclick = function(e) {
+        if (passwordStep.style.display === 'none') {
+            nextStep();
+        }
+    };
+
+    document.getElementById('deleteForm').action = "{{ url_for('produit.suprimer_produit', product_id=0) }}".replace('0', id);
+}
+
+function nextStep() {
+    const passwordStep = document.getElementById('passwordStep');
+    const confirmBtn = document.getElementById('confirmBtn');
+    const modalText = document.getElementById('modalText');
+    const passwordInput = document.getElementById('deletePassword');
+
+    modalText.innerText = "Sécurité : Veuillez confirmer votre identité pour finaliser la suppression.";
+    passwordStep.style.display = 'block';
+    setTimeout(() => passwordInput.focus(), 100);
+    
+    confirmBtn.innerText = "Valider la suppression";
+    confirmBtn.type = "submit"; 
+    confirmBtn.onclick = null; // Laisse le formulaire se soumettre
+}
+
+function closeModal() {
+    document.getElementById('deleteConfirmModal').style.display = 'none';
+    // On retire le paramètre de l'URL pour éviter que la modale ne se rouvre au rechargement
+    const url = new URL(window.location);
+    url.searchParams.delete('confirm_delete');
+    window.history.replaceState({}, '', url);
+}
+
+
+function showUpdateModal(id) {
+    currentProductId = id;
+    const modal = document.getElementById('updateProductModal');
+    const infoStep = document.getElementById('updateInfoStep');
+    const passwordStep = document.getElementById('updatePasswordStep');
+    const updateConfirmBtn = document.getElementById('updateConfirmBtn');
+
+    // Récupération des données depuis les attributs data-* de la ligne du tableau (tr)
+    const card = document.querySelector(`tr[data-id="${id}"]`);
+    if (card) {
+        document.getElementById('updateName').value = card.dataset.name || '';
+        document.getElementById('updatePrice').value = card.dataset.price || '';
+        document.getElementById('updateDesc').value = card.dataset.description || '';
+    }
+
+    modal.style.display = 'block';
+    
+    // Réinitialisation de la modale (Etape 1)
+    infoStep.style.display = 'block';
+    passwordStep.style.display = 'none';
+    
+    updateConfirmBtn.innerText = "Suivant";
+    updateConfirmBtn.type = "button";
+    
+    updateConfirmBtn.onclick = function(e) {
+        if (passwordStep.style.display === 'none') {
+            nextUpdateStep();
+        }
+    };
+
+    document.getElementById('updateForm').action = "{{ url_for('produit.modifier_produit', product_id=0) }}".replace('0', id);
+}
+
+function nextUpdateStep() {
+    const infoStep = document.getElementById('updateInfoStep');
+    const passwordStep = document.getElementById('updatePasswordStep');
+    const updateConfirmBtn = document.getElementById('updateConfirmBtn');
+    const passwordInput = document.getElementById('updatePassword');
+
+    // Étape 2 : Cacher les infos et demander le mot de passe
+    infoStep.style.display = 'none';
+    passwordStep.style.display = 'block';
+    
+    setTimeout(() => passwordInput.focus(), 100);
+    
+    updateConfirmBtn.innerText = "Valider les modifications";
+    updateConfirmBtn.type = "submit";
+    updateConfirmBtn.onclick = null; // Laisse le bouton soumettre le formulaire
+}
+
+function closeUpdateModal() {
+    document.getElementById('updateProductModal').style.display = 'none';
+    // On retire le paramètre de l'URL pour éviter que la modale ne se rouvre au rechargement
+    const url = new URL(window.location);
+    url.searchParams.delete('update_product');
+    window.history.replaceState({}, '', url);
+}
+</script>
 <script src="{{ url_for('static', filename='js/seller_dash.js') }}" defer></script>
 
 </body>
