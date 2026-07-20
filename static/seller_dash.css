@@ -1,0 +1,134 @@
+/* Scrollbar sobre */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #fdf2f4; } /* Rose très clair */
+::-webkit-scrollbar-thumb { background: #ff4081; border-radius: 8px; } /* Rose accentué */
+::-webkit-scrollbar-thumb:hover { background: #e03670; }
+
+body {
+  background: linear-gradient(to right, #ffdde1, #c8b6ff);
+  font-family: 'Poppins', sans-serif;
+  -webkit-font-smoothing: antialiased; /* Rendu de police plus lisse */
+}
+
+/* Transition des onglets */
+.tab-panel { display: none; animation: fadeIn .35s ease; }
+.tab-panel.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Animation d'insertion d'un nouveau ticket */
+@keyframes slideInTicket {
+  from { opacity: 0; transform: translateY(-16px) scale(0.98); background-color: #fdf2f4; } /* Fond rose pour l'animation */
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ticket-new { animation: slideInTicket .6s ease; }
+
+/* Toast */
+#toast-container { position: fixed; top: 5rem; right: 1rem; z-index: 60; display: flex; flex-direction: column; gap: .5rem; }
+@keyframes toastIn { from { opacity:0; transform: translateX(30px);} to {opacity:1; transform: translateX(0);} }
+.toast { animation: toastIn .35s ease; }
+
+/* Sidebar mobile off-canvas */
+#sidebar { transition: transform .3s ease; }
+@media (max-width: 1023px) {
+  #sidebar { position: fixed; inset: 0 auto 0 0; transform: translateX(-100%); z-index: 50; }
+  #sidebar.open { transform: translateX(0); }
+}
+
+/* En-tête principal avec effet verre dépoli */
+#main-header {
+  background-color: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(226, 232, 240, 0.5); /* slate-200/50 */
+}
+
+/* Styles pour les boutons de navigation actifs/inactifs (déplacé depuis JS) */
+.nav-btn.active {
+  background-color: #fdf2f4; /* Fond rose très clair */
+  color: #ff4081; /* Texte rose accentué */
+  font-weight: 600;
+}
+.nav-btn:not(.active) {
+  color: #4b0082; /* Texte violet principal */
+}
+.nav-btn:not(.active):hover {
+  background-color: #fdf2f4; /* Fond rose très clair au survol */
+  color: #ff4081; /* Texte rose au survol */
+}
+
+/* Style des cartes et ombres */
+.shadow-card {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.shadow-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Style pour le bouton "Ajouter un produit" */
+.add-product-btn {
+  background-color: #ff4081;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: background-color 0.2s;
+}
+.add-product-btn:hover {
+  background-color: #e03670;
+}
+
+/* Style pour les cartes de statistiques */
+.stat-card {
+  background-color: white;
+  border-radius: 0.75rem; /* 12px */
+  padding: 1.25rem; /* 20px */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+.stat-icon {
+  width: 2.75rem; /* 44px */
+  height: 2.75rem; /* 44px */
+  border-radius: 0.5rem; /* 8px */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Bouton pour changer de vue (Acheteur/Vendeur) */
+.switch-view-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem; /* 12px */
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem; /* 8px */
+  background-color: #4b0082;
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background-color 0.2s ease;
+}
+.switch-view-btn:hover {
+  background-color: #3a0066;
+}
+
+/* Style pour la barre de recherche dans l'en-tête */
+.header-search {
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+.header-search:focus {
+  background-color: rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 2px rgba(255, 64, 129, 0.5); /* Ombre rose au focus */
+  outline: none;
+}
+.header-search::placeholder {
+  color: rgba(75, 0, 130, 0.6); /* Placeholder violet semi-transparent */
+}

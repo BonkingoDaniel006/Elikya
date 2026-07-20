@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de Bord - {{ user.nom_boutique or 'Vendeur' }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='profil_vendeur.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='fil_actu.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/seller_dash.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+<!-- Header identique à profil_vendeur pour la cohérence -->
+<header>
+    <div class="header-top">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Rechercher..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+        </div>
+        <label for="menu-toggle" class="hamburger">☰</label>
+    </div>
+    <input type="checkbox" id="menu-toggle" class="menu-cb">
+    <nav class="nav-menu">
+        <ul class="nav-list">
+            <li><a href="{{ url_for('feed.index') }}" class="nav-item"><i class="fa-solid fa-house nav-icon"></i> Accueil</a></li>
+            <li><a href="{{ url_for('notification.notifications') }}" class="nav-item"><i class="fa-solid fa-bell nav-icon"></i> Notifications</a></li>
+            <li><a href="{{ url_for('panier.panier') }}" class="nav-item"><i class="fa-solid fa-cart-shopping nav-icon"></i> Panier</a></li>
+            <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
+                <div class="profile" style="width:30px; height:30px;">
+                    {% if user and user.get('profil') %}<img src="{{ user['profil'] }}" class="profil-img" style="width:100%; border-radius:50%;">
+                    {% else %}<img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" style="width:100%; border-radius:50%;">{% endif %}
+                </div> Profil
+            </a></li>
+        </ul>
+    </nav>
+</header>
+
+<!-- Navigation par onglets -->
+<nav class="profile-tabs">
+  <a href="{{ url_for('buyer.profil_acheteur') }}" class="tab-item {{ 'active' if request.endpoint == 'buyer.profil_acheteur' }}">
+    <i class="fa-solid fa-circle-user"></i> Profil Acheteur
+  </a>
+  <a href="{{ url_for('seller.seller_dashboard') }}" class="tab-item {{ 'active' if request.endpoint == 'seller.seller_dashboard' }}">
+    <i class="fa-solid fa-shop"></i> Tableau de Bord Vendeur
+  </a>
+</nav>
+
+<main class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>Bienvenue, {{ user.prenom }} !</h1>
+        <p>Gérez votre boutique : <strong>{{ user.nom_boutique or 'Boutique sans nom' }}</strong></p>
+    </div>
+
+    <!-- Cartes de statistiques -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <i class="fa-solid fa-dollar-sign stat-icon"></i>
+            <div class="stat-info">
+                <span class="stat-title">Ventes (30j)</span>
+                <span class="stat-value">0,00 €</span>
+                <span class="stat-desc">À venir</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <i class="fa-solid fa-box-archive stat-icon"></i>
+            <div class="stat-info">
+                <span class="stat-title">Produits Actifs</span>
+                <span class="stat-value">{{ produits|length }}</span>
+                <span class="stat-desc">Total de vos articles</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <i class="fa-solid fa-receipt stat-icon"></i>
+            <div class="stat-info">
+                <span class="stat-title">Commandes Récentes</span>
+                <span class="stat-value">0</span>
+                <span class="stat-desc">En attente de traitement</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gestion des produits -->
+    <section class="products-management card">
+        <div class="products-header">
+            <h2>Mes Produits</h2>
+            <a href="{{ url_for('produit.ajouter_produit') }}" class="btn btn-primary"><i class="fa-solid fa-plus"></i> Ajouter un produit</a>
+        </div>
+        <div class="product-list-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Prix</th>
+                        <th>Stock</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in produits %}
+                    <tr>
+                        <td>{{ p.name }}</td>
+                        <td>{{ "%.2f"|format(p.price|float) }} €</td>
+                        <td>N/A</td>
+                        <td class="product-actions">
+                            <a href="{{ url_for('produit.modifier_produit', product_id=p.id) }}" class="btn btn-secondary"><i class="fa-solid fa-pen"></i></a>
+                            <a href="{{ url_for('produit.suprimer_produit', product_id=p.id) }}" class="btn btn-danger"><i class="fa-solid fa-trash"></i></a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="no-product">Vous n'avez aucun produit pour le moment.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<footer><a href="{{ url_for('auth.deconnexion') }}" class="secondary">Se déconnecter</a></footer>
+</body>
+</html>
