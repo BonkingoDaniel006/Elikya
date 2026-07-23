@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mes Notifications - Elikya</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='fil_actu.css') }}"> {# Assuming fil_actu.css has general header styles #}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Add some basic styling for notifications page */
+    .notifications-container {
+      max-width: 800px;
+      margin: 30px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .notification-item {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      transition: background-color 0.2s ease;
+    }
+    .notification-item:last-child {
+      border-bottom: none;
+    }
+    .notification-item.unread {
+      background-color: #fdf2f4; /* Light pink for unread */
+    }
+    .notification-item:hover {
+      background-color: #f9f9f9;
+    }
+    .notification-icon {
+      font-size: 1.5rem;
+      color: #ff4081;
+      margin-right: 15px;
+    }
+    .notification-content {
+      flex-grow: 1;
+    }
+    .notification-content h4 {
+      margin: 0 0 5px 0;
+      color: #4b0082;
+      font-size: 1.1rem;
+    }
+    .notification-content p {
+      margin: 0;
+      color: #555;
+      font-size: 0.9rem;
+    }
+    .notification-time {
+      font-size: 0.8rem;
+      color: #999;
+      margin-left: 15px;
+      white-space: nowrap;
+    }
+    .notification-actions {
+      margin-left: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    .notification-actions form {
+        margin: 0;
+    }
+    .notification-actions button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: #4b0082;
+        font-size: 1rem;
+        transition: color 0.2s;
+    }
+    .notification-actions button:hover {
+        color: #ff4081;
+    }
+    .no-notifications {
+        text-align: center;
+        padding: 30px;
+        color: #777;
+    }
+    .mark-all-read-btn {
+        display: block;
+        width: fit-content;
+        margin: 20px auto;
+        padding: 10px 20px;
+        background-color: #4b0082;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: background-color 0.2s;
+    }
+    .mark-all-read-btn:hover {
+        background-color: #3a0066;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo-container {{ 'active-home' if request.endpoint == 'auth.index' }}">
+      <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
+    </div>
+
+    <div class="search-bar">
+      <input type="text" placeholder="Rechercher un produit..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
+    </div>
+
+    <label for="menu-toggle" class="hamburger">☰</label>
+  </div>
+
+  <input type="checkbox" id="menu-toggle" class="menu-cb">
+
+  <nav class="nav-menu">
+    <ul class="nav-list">
+      <li><a href="{{ url_for('auth.index') }}" class="nav-item">
+        <i class="fa-solid fa-house nav-icon"></i> Accueil
+      </a></li>
+      <li><a href="{{ url_for('notification.notifications') }}" class="nav-item">
+        <i class="fa-solid fa-bell nav-icon"></i> Notifications
+      </a></li>
+      <li><a href="{{ url_for('panier.panier') }}" class="nav-item">
+        <i class="fa-solid fa-cart-shopping nav-icon"></i> Panier
+      </a></li>
+      <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
+        <div class="profile" style="width:30px; height:30px;">
+          {% if user and user.get('profil') %}
+            <img src="{{ user['profil'] }}" class="profil-img" style="width:100%; border-radius:50%;">
+          {% else %}
+            <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" style="width:100%; border-radius:50%;">
+          {% endif %}
+        </div> Profil
+      </a></li>
+    </ul>
+  </nav>
+</header>
+
+<main>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}" style="
+            background-color: {% if category == 'success' %}#d4edda{% elif category == 'danger' %}#f8d7da{% elif category == 'warning' %}#fff3cd{% else %}#e2e3e5{% endif %};
+            color: {% if category == 'success' %}#155724{% elif category == 'danger' %}#721c24{% elif category == 'warning' %}#856404{% else %}#383d41{% endif %};
+            padding: 10px 15px;
+            border-left: 4px solid {% if category == 'success' %}#28a745{% elif category == 'danger' %}#dc3545{% elif category == 'warning' %}#ffc107{% else %}#adb5bd{% endif %};
+            margin-bottom: 15px;
+            border-radius: 4px;
+          ">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <div class="notifications-container">
+    <h2>Mes Notifications</h2>
+
+    {% if notifications %}
+        <form action="{{ url_for('notification.mark_all_as_read') }}" method="POST">
+            <button type="submit" class="mark-all-read-btn">Marquer tout comme lu</button>
+        </form>
+        {% for notification in notifications %}
+            <div class="notification-item {% if not notification.is_read %}unread{% endif %}">
+                <i class="fa-solid fa-bell notification-icon"></i>
+                <div class="notification-content">
+                    <h4>{{ notification.title }}</h4>
+                    <p>{{ notification.content }}</p>
+                </div>
+                <span class="notification-time">{{ notification.created_at.strftime('%d/%m/%Y %H:%M') }}</span>
+                <div class="notification-actions">
+                    {% if not notification.is_read %}
+                        <form action="{{ url_for('notification.mark_as_read', notification_id=notification.id) }}" method="POST">
+                            <button type="submit" title="Marquer comme lu"><i class="fa-solid fa-check"></i></button>
+                        </form>
+                    {% endif %}
+                    <form action="{{ url_for('notification.delete_notification', notification_id=notification.id) }}" method="POST">
+                        <button type="submit" title="Supprimer"><i class="fa-solid fa-trash"></i></button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="no-notifications">Vous n'avez aucune notification pour le moment.</p>
+    {% endif %}
+  </div>
+</main>
+
+</body>
+</html>
