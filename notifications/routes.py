@@ -1,9 +1,18 @@
-from flask import Blueprint, redirect, url_for, flash
+from flask import Blueprint, redirect, url_for, flash, render_template
 from flask_login import login_required, current_user
 from notifications.models import Notification
 
-notifications_bp = Blueprint('notification', __name__)
+notifications_bp = Blueprint('notification', __name__, template_folder='templates')
 
+@notifications_bp.route("/notifications")
+@login_required
+def notifications():
+    """Affiche la page des notifications pour l'utilisateur."""
+    user_notifications = Notification.get_for_user(current_user.id)
+    user_info = current_user.get_claims() if current_user.is_authenticated else None
+    # Rend le template dédié aux notifications
+    return render_template('notifications.html', notifications=user_notifications, user=user_info)
+    
 @notifications_bp.route("/notifications/mark-read/<int:notification_id>", methods=['POST'])
 @login_required
 def mark_as_read(notification_id):
