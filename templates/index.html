@@ -51,6 +51,53 @@
 </header>
 
 <main>
+
+  <!-- Hero Carousel -->
+  <div class="hero-carousel">
+    <div class="carousel-slides">
+      <!-- Slide 1 -->
+      <div class="carousel-slide active" style="background-image: url('https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=2070&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Les meilleures offres Tech</h2>
+          <p>Découvrez une sélection de produits high-tech à des prix imbattables.</p>
+          <a href="#" class="slide-btn">J'en profite</a>
+        </div>
+      </div>
+      <!-- Slide 2 -->
+      <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=2070&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Accessoires indispensables</h2>
+          <p>Tout ce dont vous avez besoin pour compléter votre setup.</p>
+        </div>
+      </div>
+      <!-- Slide 3 -->
+      <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Nouvelle Collection Mode</h2>
+          <p>Exprimez votre style avec nos dernières tendances.</p>
+          <a href="#" class="slide-btn">Découvrir</a>
+        </div>
+      </div>
+      <!-- Slide 4 -->
+      <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2127&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Sublimez votre intérieur</h2>
+          <p>Des articles de décoration pour une maison qui vous ressemble.</p>
+        </div>
+      </div>
+      <!-- Slide 5 -->
+      <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1508873535684-277a3cbcc4e8?q=80&w=2070&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Promotions Exclusives</h2>
+          <p>Jusqu'à -50% sur une sélection d'articles. N'attendez plus !</p>
+        </div>
+      </div>
+    </div>
+    <button class="carousel-control prev"><i class="fa-solid fa-chevron-left"></i></button>
+    <button class="carousel-control next"><i class="fa-solid fa-chevron-right"></i></button>
+  </div>
+  
+  <div>les filtres</div>
   <div class="product-grid">
     {% for p in produits %}
     <a href="{{ url_for('produit.detail_produit', product_id=p['id']) }}" style="text-decoration: none; color: inherit;">
@@ -73,7 +120,38 @@
   </div>
 </main>
 <footer></footer>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const slides = document.querySelectorAll('.carousel-slide');
+    const prevBtn = document.querySelector('.carousel-control.prev');
+    const nextBtn = document.querySelector('.carousel-control.next');
+    let currentSlide = 0;
 
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === index);
+        });
+    }
+
+    function next() {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }
+
+    function prev() {
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+        showSlide(currentSlide);
+    }
+
+    if(prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', prev);
+        nextBtn.addEventListener('click', next);
+    }
+
+    // Optionnel: changement automatique toutes les 5 secondes
+    setInterval(next, 5000);
+});
+</script>
 <script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
 </body>
 </html>
