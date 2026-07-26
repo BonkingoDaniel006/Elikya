@@ -63,7 +63,8 @@ def add_panier(product_id):
         seller_id=produit.seller_id,
         seller_name=produit.seller_name,
         quantite=quantite,
-        prix_total=prix_total
+        prix_total=prix_total,
+        categorie=produit.categorie
     )
     
     flash(f"{produit.name} ajouté au panier !", "success")
@@ -83,6 +84,7 @@ def ajouter_produit():
     name = request.form.get("nom_produit")
     price = request.form.get("prix")
     description = request.form.get("description")
+    categorie = request.form.get("categorie")
     # On récupère le FICHIER et non le texte
     image_file = request.files.get("image_url")
     seller_id = user_info.get("id")
@@ -93,7 +95,9 @@ def ajouter_produit():
         name=name, 
         price=price, 
         description=description, 
-        image_url=image_file)
+        image_url=image_file,
+        categorie=categorie
+    )
 
     # Vérification si le modèle a renvoyé une erreur (ex: format non autorisé)
     if isinstance(result, tuple) and len(result) == 2:
@@ -157,6 +161,7 @@ def modifier_produit(product_id):
     name = request.form.get("nom_produit")
     price = request.form.get("prix")
     description = request.form.get("description")
+    categorie = request.form.get("categorie")
     image_file = request.files.get("image_url")  # Récupération du fichier image
     password = request.form.get("password")
     
@@ -170,7 +175,8 @@ def modifier_produit(product_id):
             name=name, 
             price=price, 
             description=description, 
-            image_url=image_file
+            image_url=image_file,
+            categorie=categorie
         )
 
         # Vérification si le modèle a renvoyé une erreur de format de fichier

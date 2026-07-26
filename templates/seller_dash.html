@@ -245,6 +245,7 @@
                   data-name="{{ produit.name }}"
                   data-price="{{ "%.2f"|format(produit.price|float) }}"
                   data-description="{{ produit.description }}"
+                  data-category="{{ produit.categorie or 'Autres' }}"
                   >
                 <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                   <div class="flex items-center gap-3">
@@ -297,6 +298,10 @@
                 <p class="text-sm text-gray-500">Description</p>
                 <p class="text-gray-700" id="viewProductDescription">Description du produit...</p>
               </div>
+              <div>
+                <p class="text-sm text-gray-500">Catégorie</p>
+                <p class="font-semibold" id="viewProductCategory">Catégorie...</p>
+              </div>
             </div>
             <button type="button" onclick="closeViewModal()" class="mt-6 w-full btn-modal btn-modal-cancel">Fermer</button>
           </div>
@@ -337,6 +342,16 @@
                     <input type="text" name="nom_produit" id="updateName" placeholder="Nom du produit" class="modal-input" required>
                     <input type="number" step="0.01" name="prix" id="updatePrice" placeholder="Prix ($)" class="modal-input" required>
                     <textarea name="description" id="updateDesc" placeholder="Description" class="modal-input" style="height: 100px; resize: none;" required></textarea>
+                    <select name="categorie" id="updateCategory" class="modal-input" required>
+                      <option value="" disabled>-- Choisir une catégorie --</option>
+                      <option value="Gaming">Gaming</option>
+                      <option value="Téléphone">Téléphone</option>
+                      <option value="Cosmétique">Cosmétique</option>
+                      <option value="Fleurs">Fleurs</option>
+                      <option value="Photo">Photo</option>
+                      <option value="Divers">Divers</option>
+                      <option value="Autres">Autres</option>
+                    </select>
                     <label style="display: block; text-align: left; margin-left: 10px; font-size: 0.8rem; color: #666;">Changer l'image (optionnel) :</label>
                     <input type="file" name="image_url" id="updateImage" class="modal-input">
                 </div>
@@ -713,6 +728,7 @@ function showUpdateModal(id) {
         document.getElementById('updateName').value = card.dataset.name || '';
         document.getElementById('updatePrice').value = card.dataset.price || '';
         document.getElementById('updateDesc').value = card.dataset.description || '';
+        document.getElementById('updateCategory').value = card.dataset.category || 'Autres';
     }
 
     modal.style.display = 'block';
@@ -772,6 +788,7 @@ function showViewModal(id) {
         document.getElementById('viewProductName').innerText = productRow.dataset.name || 'N/A';
         document.getElementById('viewProductPrice').innerText = (productRow.dataset.price || '0.00') + ' $';
         document.getElementById('viewProductDescription').innerText = productRow.dataset.description || 'Aucune description.';
+        document.getElementById('viewProductCategory').innerText = productRow.dataset.category || 'Non spécifiée';
         modal.style.display = 'block';
     }
 }

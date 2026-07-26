@@ -368,12 +368,16 @@ main {
   height: 100%;
   background: rgba(75, 0, 130, 0.2);
   backdrop-filter: blur(5px);
+  /* Améliorations pour le centrage et le défilement */
+  align-items: flex-start; /* Aligne en haut */
+  justify-content: center;
+  overflow-y: auto; /* Permet de faire défiler si la modale est trop grande */
+  padding: 5vh 0; /* Ajoute un peu d'espace en haut et en bas */
 }
 
 .modal-box {
   background: white;
-  margin: 12% auto;
-  padding: 30px;
+  margin: auto; /* Centrage horizontal automatique */  padding: 30px;
   width: 90%;
   max-width: 400px;
   border-radius: 20px;
@@ -428,6 +432,92 @@ main {
 .btn-modal-confirm {
   background: #ff4081;
   color: white;
+}
+
+.profile-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 15px;
+  align-items: center;
+}
+
+.logout-btn {
+  display: inline-block;
+  background: transparent;
+  color: #ff4081;
+  padding: 8px 23px; /* Ajusté pour avoir la même hauteur que l'autre bouton */
+  border-radius: 25px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  border: 2px solid #ffdde1;
+  transition: all 0.3s ease;
+}
+.logout-btn:hover { background: #fff0f4; }
+
+/* Améliorations pour la modale de modification de profil */
+.modal-box.profile-modal {
+  max-width: 650px; /* Plus large pour plus de confort */
+  text-align: left;
+}
+
+.profile-modal h3 {
+  color: #4b0082;
+  margin-top: 0;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.profile-form-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 15px 20px;
+}
+
+@media (min-width: 600px) {
+  .profile-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.profile-form-grid .full-width {
+  grid-column: 1 / -1;
+}
+
+.profile-image-upload {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: #f9f9f9;
+  padding: 15px;
+  border-radius: 15px;
+  border: 1px solid #eee;
+}
+
+.profile-image-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 3px solid #ffdde1;
+}
+
+.profile-image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-image-upload .file-input-wrapper {
+  flex-grow: 1;
+}
+
+.profile-image-upload label {
+  font-size: 0.9rem;
 }
 
 footer {
