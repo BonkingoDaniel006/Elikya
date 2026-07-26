@@ -1,6 +1,6 @@
 <header>
     <div class="header-top">
-      <div class="logo-container {{ 'active-home' if request.endpoint == 'auth.index' }}">
+      <div class="logo-container {{ 'active-home' if request.endpoint == 'auth.index' or request.endpoint == 'racine' }}">
         <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
       </div>
   
@@ -28,11 +28,11 @@
           <i class="fa-solid fa-receipt w-5 text-center"></i> Commandes
         </a></li>
         <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
-          <div class="profile" style="width:30px; height:30px;">
+          <div class="profile">
             {% if user and user.get('profil') %}
-              <img src="{{ user['profil'] }}" class="profil-img" style="width:100%; border-radius:50%;">
+              <img src="{{ user['profil'] }}" class="profil-img" alt="Profil">
             {% else %}
-              <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" style="width:100%; border-radius:50%;">
+              <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" alt="Profil par défaut">
             {% endif %}
           </div> Profil
         </a></li>
