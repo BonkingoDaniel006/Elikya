@@ -25,37 +25,62 @@ def racine():
 def inscription():
     if current_user.is_authenticated:
         return redirect(url_for('auth.index'))
+        
+    if request.method == 'POST':
+        if request.form['password'] != request.form['confirm_password']:
+            flash("Les mots de passe ne correspondent pas.", "danger")
+            return render_template('inscription_etape1.html')
+
+        # Étape 1: Collecte des informations de base
+        user_data = {
+            'nom': request.form['last_name'],
+            'prenom': request.form['first_name'],
+            'email': request.form['email'],
+            'password': request.form['password']
+        }
+
+        # Stocker temporairement dans la session et passer à l'étape 2
+        session['registration_step1_data'] = user_data
+        return redirect(url_for('auth.inscription_profil'))
+            
+    return render_template('inscription_etape1.html')
+
+@auth_bp.route('/inscription/profil', methods=['GET', 'POST'])
+def inscription_profil():
+    if current_user.is_authenticated:
+        return redirect(url_for('auth.index'))
+
+    # S'assurer que l'utilisateur a bien complété l'étape 1
+    if 'registration_step1_data' not in session:
+        flash("Veuillez commencer par la première étape de l'inscription.", "warning")
+        return redirect(url_for('auth.inscription'))
+
     if request.method == 'POST':
         # Vérifier si la politique de confidentialité a été acceptée
         if 'privacy_policy' not in request.form:
             flash("Vous devez accepter la politique de confidentialité pour continuer.", "danger")
-            return redirect(url_for('auth.inscription'))
+            return render_template('inscription_etape2.html')
 
-        # Ajout de la vérification de la confirmation du mot de passe
-        if request.form['password'] != request.form['confirm_password']:
-            flash("Les mots de passe ne correspondent pas.", "danger")
-            return redirect(url_for('auth.inscription'))
-
-        user_data = {
-            'nom': request.form['last_name'],
-            'prenom': request.form['first_name'],
-            'postnom': request.form['middle_name'],
-            'email': request.form['email'],
-            'naissance': request.form['naissance'],
-            'adresse': request.form['adresse'],
-            'nom_boutique': request.form['nom_boutique'],
-            'description': request.form['description'],
-            'password': request.form['password']
+        # Fusionner les données de l'étape 1 et 2
+        step1_data = session.get('registration_step1_data', {})
+        full_user_data = {
+            **step1_data, # Opérateur de décomposition de dictionnaire
+            'postnom': request.form.get('middle_name'),
+            'naissance': request.form.get('naissance'),
+            'adresse': request.form.get('adresse'),
+            'nom_boutique': request.form.get('nom_boutique'),
+            'description': request.form.get('description')
         }
 
-        if process_registration(user_data):
-            # S'il n'y a pas d'erreur, on continue vers la vérification OTP
-            return redirect(url_for('auth.verify'))
+        # Appeler le service de traitement avec les données complètes
+        if process_registration(full_user_data):
+            session.pop('registration_step1_data', None) # Nettoyer la session
+            return redirect(url_for('auth.verify')) # Rediriger vers la vérification OTP
         else:
-            # S'il y a une erreur, le service a déjà "flashé" le message. On redirige.
-            return redirect(url_for('auth.inscription'))
+            # Si le service a flashé une erreur (ex: email déjà pris), on reste sur l'étape 2
+            return render_template('inscription_etape2.html')
             
-    return render_template('inscription.html')
+    return render_template('inscription_etape2.html')
 
 @auth_bp.route('/verify')
 def verify():

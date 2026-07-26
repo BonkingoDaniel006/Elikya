@@ -322,3 +322,45 @@ main {
 .carousel-control.next {
   right: 15px;
 }
+
+/* --- FILTER BAR STYLES --- */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 2.5rem;
+  padding: 10px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 50px;
+}
+
+.filter-btn {
+  padding: 8px 20px;
+  border: 1px solid transparent;
+  border-radius: 20px;
+  background-color: transparent;
+  color: #4b0082;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.filter-btn:hover {
+  background-color: rgba(255, 64, 129, 0.1);
+  color: #ff4081;
+}
+
+.filter-btn.active {
+  background-color: #ff4081;
+  color: white;
+  border-color: #ff4081;
+  box-shadow: 0 2px 8px rgba(255, 64, 129, 0.3);
+}
+
+/* Classe pour les éléments produits afin que le JS puisse les cibler */
+.product-item {
+  display: block; /* S'assure que l'élément est visible par défaut */
+  transition: opacity 0.3s ease;
+}

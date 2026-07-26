@@ -97,11 +97,22 @@
     <button class="carousel-control next"><i class="fa-solid fa-chevron-right"></i></button>
   </div>
   
-  <div>les filtres</div>
+  <!-- Barre de filtres par catégorie -->
+  <div class="filter-bar">
+    <button class="filter-btn active" data-category="all">Tous</button>
+    <button class="filter-btn" data-category="gaming">Gaming</button>
+    <button class="filter-btn" data-category="telephone">Téléphone</button>
+    <button class="filter-btn" data-category="cosmetique">Cosmétique</button>
+    <button class="filter-btn" data-category="fleurs">Fleurs</button>
+    <button class="filter-btn" data-category="photo">Photo</button>
+    <button class="filter-btn" data-category="divers">Divers</button>
+    <button class="filter-btn" data-category="autres">Autres</button>
+  </div>
+
   <div class="product-grid">
     {% for p in produits %}
-    <a href="{{ url_for('produit.detail_produit', product_id=p['id']) }}" style="text-decoration: none; color: inherit;">
-      <div class="product-card" >
+    <a href="{{ url_for('produit.detail_produit', product_id=p['id']) }}" class="product-card" data-category="{{ p.categorie | lower if p.categorie else 'autres' }}" style="text-decoration: none; color: inherit;">
+      <div>
 
         <!-- Image du produit -->
         <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-image">
@@ -112,6 +123,7 @@
 
           <!-- Nom de la boutique -->
           <p class="shop-name">Shop: {{ p.nom_boutique }}</p>
+          <p class="shop-name">{{p.categorie}}</p>
         </div>
 
       </div>
@@ -150,6 +162,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Optionnel: changement automatique toutes les 5 secondes
     setInterval(next, 5000);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const productCards = document.querySelectorAll('.product-card');
+
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // 1. Gérer la classe active sur les boutons
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      // 2. Récupérer la catégorie sélectionnée
+      const selectedCategory = button.getAttribute('data-category').toLowerCase();
+
+      // 3. Afficher / Masquer les produits
+      productCards.forEach(card => {
+        const productCategory = card.getAttribute('data-category');
+
+        // Si la catégorie du produit n'existe pas, on la considère comme "autres"
+        const category = productCategory ? productCategory.toLowerCase() : 'autres';
+
+        if (selectedCategory === 'all' || category === selectedCategory) {
+          card.style.display = 'block'; // ou 'flex' selon ton CSS
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
 });
 </script>
 <script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
