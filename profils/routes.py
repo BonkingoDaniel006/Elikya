@@ -16,7 +16,7 @@ def profil_acheteur():
         postnom = request.form.get("postnom")
         adresse = request.form.get("adresse")
         new_password = request.form.get("new_password")
-        profil_file = request.files.get("profil")
+        profil_file = request.files.get("profil") # Le champ pour la nouvelle image de profil
 
         if not Buyer.verifier_mot_de_passe(current_user.id, current_password, bcrypt):
             flash("Mot de passe actuel incorrect. Modification annulée.", "danger")

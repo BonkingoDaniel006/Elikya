@@ -26,7 +26,7 @@ class Produits():
         conn.close()
         return produits
 class Details_produit():
-    def __init__(self, id, seller_id, name, price, description, image_url, seller_name=None):
+    def __init__(self, id, seller_id, name, price, description, image_url, categorie, seller_name=None):
         self.id = id
         self.seller_id = seller_id
         self.name = name
@@ -34,6 +34,7 @@ class Details_produit():
         self.description = description
         self.image_url = image_url
         self.seller_name = seller_name
+        self.categorie = categorie
 
 
 
@@ -45,7 +46,8 @@ class Details_produit():
             "price": self.price,
             "description": self.description,
             "image_url": self.image_url,
-            "seller_name": self.seller_name
+            "seller_name": self.seller_name, 
+            "categorie": self.categorie
         }
     @classmethod
     def get_by_id(cls, product_id):
@@ -68,7 +70,8 @@ class Details_produit():
                     price=row['price'],
                     description=row['description'],
                     image_url=row['image_url'],
-                    seller_name=row['seller_name']
+                    seller_name=row['seller_name'],
+                    categorie=row['categorie']
                 )
             return None
         finally:
@@ -112,8 +115,8 @@ class Add_panier():
 
     @classmethod
     def create(cls, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, 
-               product_price, product_description, product_image_url, seller_id, 
-               seller_name, quantite, prix_total):
+               product_price, product_description, product_image_url, seller_id,
+               seller_name, quantite, prix_total, categorie):
         """Insère un nouvel article dans le panier (table panier)"""
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -122,13 +125,13 @@ class Add_panier():
                 INSERT INTO panier (
                     buyer_id, buyer_first_name, buyer_last_name,
                     product_id, product_name, product_price, product_description, product_image_url,
-                    seller_id, seller_name, quantite, prix_total
+                    seller_id, seller_name, quantite, prix_total, categorie
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 buyer_id, buyer_first_name, buyer_last_name,
                 product_id, product_name, product_price, product_description, product_image_url,
-                seller_id, seller_name, quantite, prix_total
+                seller_id, seller_name, quantite, prix_total, categorie
             ))
             conn.commit()
         finally:
@@ -136,13 +139,14 @@ class Add_panier():
             conn.close()
 
 class Ajouter_produit():
-    def __init__(self, id, seller_id, name, price, description, image_url):
+    def __init__(self, id, seller_id, name, price, description, image_url, categorie):
         self.id = id
         self.seller_id = seller_id
         self.name = name
         self.price = price
         self.description = description
         self.image_url = image_url
+        self.categorie = categorie
 
     def get_claims(self):
         return {
@@ -151,10 +155,11 @@ class Ajouter_produit():
             "name": self.name,
             "price": self.price,
             "description": self.description,
-            "image_url": self.image_url
+            "image_url": self.image_url,
+            "categorie": self.categorie
         }
     @classmethod
-    def ajouter(cls, id, seller_id, name, price, description, image_url: FileStorage):
+    def ajouter(cls, id, seller_id, name, price, description, image_url: FileStorage, categorie):
         ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
         final_image_path = None
         
@@ -172,8 +177,8 @@ class Ajouter_produit():
         cursor = conn.cursor()
         try:
             cursor.execute("""
-                INSERT INTO produits (id, seller_id, name, price, description, image_url)
-                VALUES (%s, %s, %s, %s, %s, %s)""", (id, seller_id, name, price, description, final_image_path))
+                INSERT INTO produits (id, seller_id, name, price, description, image_url, categorie)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)""", (id, seller_id, name, price, description, final_image_path, categorie))
             conn.commit()
         finally:
             cursor.close()
@@ -234,7 +239,7 @@ class Modifier_produit():
         }
     
     @classmethod
-    def modifier(cls, id, seller_id, name, price, description, image_url):
+    def modifier(cls, id, seller_id, name, price, description, image_url, categorie):
         ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
         final_image_path = None
         
@@ -254,12 +259,12 @@ class Modifier_produit():
         try:
             if final_image_path:
                 # Mise à jour incluant la nouvelle image
-                cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s, image_url = %s WHERE id = %s", 
-                               (seller_id, name, price, description, final_image_path, id))
+                cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s, image_url = %s, categorie = %s WHERE id = %s",
+                               (seller_id, name, price, description, final_image_path, categorie, id))
             else:
                 # Mise à jour sans changer l'image existante
-                cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s WHERE id = %s", 
-                               (seller_id, name, price, description, id))
+                cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s, categorie = %s WHERE id = %s",
+                               (seller_id, name, price, description, categorie, id))
             conn.commit()
         finally:
             cursor.close()

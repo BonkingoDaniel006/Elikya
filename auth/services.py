@@ -69,10 +69,6 @@ def process_registration(form_data):
         flash(password_error, 'danger')
         return False
 
-    if User.get_by_email(form_data['email']):
-        flash('Cet email est déjà utilisé', 'danger')
-        return False
-
     verification_code = _generer_code_verification()
     if not _envoyer_otp_brevo(form_data['email'], form_data['prenom'], verification_code):
         flash("Le service d'envoi d'emails est indisponible. Veuillez réessayer plus tard.", "danger")

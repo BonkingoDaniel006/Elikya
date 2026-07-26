@@ -1,7 +1,8 @@
 import logging
-from flask import Flask, session, flash, redirect, url_for
+from flask import Flask, session, flash, redirect, url_for, request
 from config import Config
 from flask_login import current_user, logout_user
+from datetime import datetime
 import time 
 from ext import bcrypt, login_manager, mail, csrf, init_db_pool, init_redis_client # Importer les initialiseurs
 from ext import get_db_connection # S'assurer que get_db_connection est importé si utilisé ailleurs
@@ -27,7 +28,11 @@ def create_app():
         Déconnecte l'utilisateur si sa dernière activité remonte à plus de
         PERMANENT_SESSION_LIFETIME (30 minutes).
         """
-        if current_user.is_authenticated:
+        # Ne pas exécuter cette logique pour les endpoints 'static'
+        if request.endpoint and request.endpoint == 'static':
+            return
+
+        if current_user.is_authenticated and 'last_activity_time' in session:
             last_activity = session.get('last_activity_time')
             session_lifetime = app.config.get('PERMANENT_SESSION_LIFETIME')
 
@@ -39,6 +44,12 @@ def create_app():
                     flash("Votre session a expiré pour inactivité. Veuillez vous reconnecter.", "info")
                     return redirect(url_for('auth.connexion'))
             session['last_activity_time'] = time.time()
+
+    @app.context_processor
+    def inject_now():
+        """Rend la fonction now() disponible dans tous les templates."""
+        # Utiliser datetime.utcnow pour être indépendant du fuseau horaire du serveur
+        return {'now': datetime.utcnow}
 
     # Vérification des variables critiques au démarrage
     

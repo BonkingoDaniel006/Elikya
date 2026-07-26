@@ -1,21 +1,25 @@
-document.addEventListener('DOMContentLoaded', function() {
-    // Cible tous les champs de recherche ayant la classe 'global-search-input'
-    const searchInputs = document.querySelectorAll('.global-search-input');
+document.addEventListener('DOMContentLoaded', () => {
+    const searchInput = document.getElementById('search-input');
+    const productCards = document.querySelectorAll('.product-card');
 
-    searchInputs.forEach(input => {
-        input.addEventListener('keydown', function(event) {
-            // Vérifie si la touche pressée est "Entrée"
-            if (event.key === 'Enter') {
-                event.preventDefault(); // Empêche le comportement par défaut (ex: soumission de formulaire)
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase().trim();
 
-                const query = input.value.trim();
+            productCards.forEach(card => {
+                const productNameElement = card.querySelector('.product-info h3');
+                const shopNameElement = card.querySelector('.shop-name');
 
-                // Ne redirige que si la recherche n'est pas vide
-                if (query) {
-                    // Construit l'URL de recherche et redirige l'utilisateur
-                    window.location.href = `/search?q=${encodeURIComponent(query)}`;
+                const productName = productNameElement ? productNameElement.textContent.toLowerCase() : '';
+                const shopName = shopNameElement ? shopNameElement.textContent.toLowerCase() : '';
+
+                // La carte est visible si le terme de recherche est trouvé dans le nom du produit OU le nom de la boutique
+                if (productName.includes(searchTerm) || shopName.includes(searchTerm)) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
                 }
-            }
+            });
         });
-    });
+    }
 });

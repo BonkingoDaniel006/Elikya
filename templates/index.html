@@ -11,50 +11,71 @@
 
 <body>
 
-<header>
-  <div class="header-top">
-    <div class="logo-container {{ 'active-home' if request.endpoint == 'auth.index' }}">
-      <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
-    </div>
-
-    <div class="search-bar">
-      <input type="text" placeholder="Rechercher un produit..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-    </div>
-
-    <label for="menu-toggle" class="hamburger">☰</label>
-  </div>
-
-  <input type="checkbox" id="menu-toggle" class="menu-cb">
-
-  <nav class="nav-menu">
-    <ul class="nav-list">
-      <li><a href="{{ url_for('auth.index') }}" class="nav-item">
-        <i class="fa-solid fa-house nav-icon"></i> Accueil
-      </a></li>
-      <li><a href="{{ url_for('notification.notifications') }}" class="nav-item">
-        <i class="fa-solid fa-bell nav-icon"></i> Notifications
-      </a></li>
-      <li><a href="{{ url_for('panier.panier') }}" class="nav-item">
-        <i class="fa-solid fa-cart-shopping nav-icon"></i> Panier
-      </a></li>
-      <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
-        <div class="profile" style="width:30px; height:30px;">
-          {% if user and user.get('profil') %}
-            <img src="{{ user['profil'] }}" class="profil-img" style="width:100%; border-radius:50%;">
-          {% else %}
-            <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" style="width:100%; border-radius:50%;">
-          {% endif %}
-        </div> Profil
-      </a></li>
-    </ul>
-  </nav>
-</header>
+{% include 'header.html' %}
 
 <main>
+
+  <!-- Hero Carousel -->
+  <div class="hero-carousel">
+    <div class="carousel-slides">
+      <!-- Slide 1 -->
+      <div class="carousel-slide active" style="background-image: url('https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?q=80&w=2070&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Les meilleures offres Tech</h2>
+          <p>Découvrez une sélection de produits high-tech à des prix imbattables.</p>
+          <a href="#" class="slide-btn">J'en profite</a>
+        </div>
+      </div>
+      <!-- Slide 2 -->
+      <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=2070&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Accessoires indispensables</h2>
+          <p>Tout ce dont vous avez besoin pour compléter votre setup.</p>
+        </div>
+      </div>
+      <!-- Slide 3 -->
+      <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Nouvelle Collection Mode</h2>
+          <p>Exprimez votre style avec nos dernières tendances.</p>
+          <a href="#" class="slide-btn">Découvrir</a>
+        </div>
+      </div>
+      <!-- Slide 4 -->
+      <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1618220179428-22790b461013?q=80&w=2127&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Sublimez votre intérieur</h2>
+          <p>Des articles de décoration pour une maison qui vous ressemble.</p>
+        </div>
+      </div>
+      <!-- Slide 5 -->
+      <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1508873535684-277a3cbcc4e8?q=80&w=2070&auto=format&fit=crop');">
+        <div class="slide-content">
+          <h2>Promotions Exclusives</h2>
+          <p>Jusqu'à -50% sur une sélection d'articles. N'attendez plus !</p>
+        </div>
+      </div>
+    </div>
+    <button class="carousel-control prev"><i class="fa-solid fa-chevron-left"></i></button>
+    <button class="carousel-control next"><i class="fa-solid fa-chevron-right"></i></button>
+  </div>
+  
+  <!-- Barre de filtres par catégorie -->
+  <div class="filter-bar">
+    <button class="filter-btn active" data-category="all">Tous</button>
+    <button class="filter-btn" data-category="gaming">Gaming</button>
+    <button class="filter-btn" data-category="telephone">Téléphone</button>
+    <button class="filter-btn" data-category="cosmetique">Cosmétique</button>
+    <button class="filter-btn" data-category="fleurs">Fleurs</button>
+    <button class="filter-btn" data-category="photo">Photo</button>
+    <button class="filter-btn" data-category="divers">Divers</button>
+    <button class="filter-btn" data-category="autres">Autres</button>
+  </div>
+
   <div class="product-grid">
     {% for p in produits %}
-    <a href="{{ url_for('produit.detail_produit', product_id=p['id']) }}" style="text-decoration: none; color: inherit;">
-      <div class="product-card" >
+    <a href="{{ url_for('produit.detail_produit', product_id=p['id']) }}" class="product-card" data-category="{{ p.categorie | lower if p.categorie else 'autres' }}" style="text-decoration: none; color: inherit;">
+      <div>
 
         <!-- Image du produit -->
         <img src="{{ p.image_url }}" alt="{{ p.name }}" class="product-image">
@@ -65,6 +86,7 @@
 
           <!-- Nom de la boutique -->
           <p class="shop-name">Shop: {{ p.nom_boutique }}</p>
+          
         </div>
 
       </div>
@@ -72,8 +94,70 @@
     {% endfor %}
   </div>
 </main>
-<footer></footer>
+{% include 'footer.html' %}
 
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const slides = document.querySelectorAll('.carousel-slide');
+    const prevBtn = document.querySelector('.carousel-control.prev');
+    const nextBtn = document.querySelector('.carousel-control.next');
+    let currentSlide = 0;
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === index);
+        });
+    }
+
+    function next() {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }
+
+    function prev() {
+        currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+        showSlide(currentSlide);
+    }
+
+    if(prevBtn && nextBtn) {
+        prevBtn.addEventListener('click', prev);
+        nextBtn.addEventListener('click', next);
+    }
+
+    // Optionnel: changement automatique toutes les 5 secondes
+    setInterval(next, 5000);
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const filterButtons = document.querySelectorAll('.filter-btn');
+  const productCards = document.querySelectorAll('.product-card');
+
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // 1. Gérer la classe active sur les boutons
+      filterButtons.forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      // 2. Récupérer la catégorie sélectionnée
+      const selectedCategory = button.getAttribute('data-category').toLowerCase();
+
+      // 3. Afficher / Masquer les produits
+      productCards.forEach(card => {
+        const productCategory = card.getAttribute('data-category');
+
+        // Si la catégorie du produit n'existe pas, on la considère comme "autres"
+        const category = productCategory ? productCategory.toLowerCase() : 'autres';
+
+        if (selectedCategory === 'all' || category === selectedCategory) {
+          card.style.display = 'block'; // ou 'flex' selon ton CSS
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+});
+</script>
 <script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
 </body>
 </html>

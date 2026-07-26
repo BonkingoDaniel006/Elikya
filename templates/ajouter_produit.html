@@ -1,87 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ajouter un produit</title>
+    <title>Ajouter un Produit - Elikya</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='ajouter_produit.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-<header>
-  <div class="header-top">
-    <div class="logo-container {{ 'active-home' if request.endpoint == 'auth.index' }}">
-      <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Logo" style="height: 50px;">
-    </div>
 
-    <div class="search-bar">
-      <input type="text" placeholder="Rechercher un produit..." style="width:100%; padding:8px; border-radius:20px; border:none; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);">
-    </div>
+    <div class="form-container">
+        <h1>Ajouter un nouveau produit</h1>
+        <p class="subtitle">Remplissez les informations ci-dessous pour mettre en vente un article.</p>
 
-    <label for="menu-toggle" class="hamburger">☰</label>
-  </div>
+        <!-- Affichage des messages flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-  <input type="checkbox" id="menu-toggle" class="menu-cb">
-
-  <nav class="nav-menu">
-    <ul class="nav-list">
-      <li><a href="{{ url_for('auth.index') }}" class="nav-item">
-        <i class="fa-solid fa-house nav-icon"></i> Accueil
-      </a></li>
-      <li><a href="{{ url_for('notification.notifications') }}" class="nav-item">
-        <i class="fa-solid fa-bell nav-icon"></i> Notifications
-      </a></li>
-      <li><a href="{{ url_for('panier.panier') }}" class="nav-item">
-        <i class="fa-solid fa-cart-shopping nav-icon"></i> Panier
-      </a></li>
-      <li><a href="{{ url_for('buyer.profil_acheteur') }}" class="nav-item">
-        <div class="profile" style="width:30px; height:30px;">
-          {% if user and user.get('profil') %}
-            <img src="{{ user['profil'] }}" class="profil-img" style="width:100%; border-radius:50%;">
-          {% else %}
-            <img src="{{ url_for('static', filename='profils/default_profile.png') }}" class="profil-img" style="width:100%; border-radius:50%;">
-          {% endif %}
-        </div> Profil
-      </a></li>
-    </ul>
-  </nav>
-</header>
-
-<main>
-  <div >
         <form action="{{ url_for('produit.ajouter_produit') }}" method="POST" enctype="multipart/form-data">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
-            <div class="shop-info">
-                <div class="photo-container">
-                    <img src="" class="shop-photo" id="preview-image">
-                    <input type="file" id="photo-upload" name="image_url" style="display:none;">
-                    <label for="photo-upload" class="edit-icon">
-                        <i class="fa-solid fa-pen"></i>
-                    </label>
-                    <input type="file" id="photo-upload" style="display:none;">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="nom_produit">Nom du produit</label>
+                    <input type="text" id="nom_produit" name="nom_produit" required>
                 </div>
-                <label for="nom_produit">Nom du produit :</label>
-                <input type="text" id="nom_produit" name="nom_produit" required><br><br>
-                <label for="prix">Prix (Uniquement le nombre en Dollars) :</label>
-                <input type="number" id="prix" name="prix" required><br><br>
-                <label for="description">Description :</label><br>
-                <textarea id="description" name="description" rows="4" cols="50" required></textarea><br><br>
-                <button class="subscribe-btn">Valider</button>
+
+                <div class="form-group">
+                    <label for="prix">Prix ($)</label>
+                    <input type="number" id="prix" name="prix" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="categorie">Catégorie</label>
+                    <select id="categorie" name="categorie" required>
+                        <option value="" disabled selected>-- Choisir une catégorie --</option>
+                        <option value="Gaming">Gaming</option>
+                        <option value="Téléphone">Téléphone</option>
+                        <option value="Cosmétique">Cosmétique</option>
+                        <option value="Fleurs">Fleurs</option>
+                        <option value="Photo">Photo</option>
+                        <option value="Divers">Divers</option>
+                        <option value="Autres">Autres</option>
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="description">Description</label>
+                    <textarea id="description" name="description" rows="4" required></textarea>
+                </div>
+
+                <div class="image-upload-group">
+                    <div class="image-preview" id="imagePreview">
+                        <span class="placeholder">Aperçu de l'image</span>
+                    </div>
+                    <div class="form-group" style="flex-grow: 1; margin-bottom: 0;">
+                        <label for="image_url">Image du produit</label>
+                        <input type="file" id="image_url" name="image_url" accept="image/*" required>
+                    </div>
+                </div>
+
+                <div class="form-group full-width">
+                    <button type="submit" class="btn">Ajouter le produit</button>
+                </div>
             </div>
         </form>
-  </div>
-</body>
-<script>
-  const inputFile = document.getElementById("photo-upload");
-  const imgPreview = document.getElementById("preview-image");
 
-  inputFile.addEventListener("change", () => {
-    const file = inputFile.files[0];
-    if (file) {
-      imgPreview.src = URL.createObjectURL(file);
-      imgPreview.onload = () => URL.revokeObjectURL(imgPreview.src);
-    }
-  });
+        <a href="{{ url_for('seller.seller_dashboard') }}" class="back-link">Retour au tableau de bord</a>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const imageInput = document.getElementById('image_url');
+    const imagePreview = document.getElementById('imagePreview');
+
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                imagePreview.innerHTML = `<img src="${e.target.result}" alt="Aperçu">`;
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+});
 </script>
+
+</body>
 </html>

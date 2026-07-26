@@ -1,58 +1,44 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <!-- INDISPENSABLE POUR LE MOBILE -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-  <title>Connexion - Elikya</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='connexion.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - Elikya</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth_style.css') }}">
 </head>
-
 <body>
 
-  <div class="login-container">
-    <img src="{{ url_for('static', filename='profils/logo.png') }}" alt="Elikya Logo" style="width: 140px; margin: 0 auto 15px auto; display: block;">
-    <h1 style="text-align: center;">Login <br><span>Elikya</span></h1>
+    <div class="auth-container">
+        <h1>Bon retour !</h1>
+        <p class="subtitle">Connectez-vous pour continuer</p>
 
-    <form action="{{ url_for('auth.connexion') }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      
-      <div class="input-group">
-        <label for="email">Email :</label>
-        <input type="email" id="email" name="email" required>
-      </div>
+        <!-- Affichage des messages flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-      <div class="input-group">
-        <label for="motdepasse">Mot de passe :</label>
-        <input type="password" id="motdepasse" name="password" required>
-      </div>
-      
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="flash-message">
-                {{ message }}
+        <form action="{{ url_for('auth.connexion') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="email">Adresse e-mail</label>
+                <input type="email" id="email" name="email" required>
             </div>
-          {% endfor %}
-        {% endif %}
-      {% endwith %}
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn">Se connecter</button>
+        </form>
 
-      <button type="submit" class="btn-submit">Se connecter</button>
-      
-      <div class="form-links">
-        <a href="#" class="forgot-password">Mot de passe oublié ?</a>
-        
-        <p class="signup-text">
-          Vous n'avez pas encore de compte ? 
-          <a href="{{ url_for('auth.inscription') }}">S'inscrire</a>
-        </p>
-        
-        <a href="#" class="livreur-link">Je suis un livreur</a>
-      </div>
-      
-      <footer><small>&copy; D. Botay - Tous droits réservés.</small></footer>
-    </form>
-  </div>
+        <div class="auth-link">
+            <p>Pas encore de compte ? <a href="{{ url_for('auth.inscription') }}">Inscrivez-vous</a></p>
+            <!-- <p><a href="#">Mot de passe oublié ?</a></p> -->
+        </div>
+    </div>
 
 </body>
 </html>
