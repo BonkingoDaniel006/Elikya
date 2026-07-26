@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, session, flash, redirect, url_for
+from flask import Flask, session, flash, redirect, url_for, request
 from config import Config
 from flask_login import current_user, logout_user
 import time 
@@ -27,7 +27,11 @@ def create_app():
         Déconnecte l'utilisateur si sa dernière activité remonte à plus de
         PERMANENT_SESSION_LIFETIME (30 minutes).
         """
-        if current_user.is_authenticated:
+        # Ne pas exécuter cette logique pour les endpoints 'static'
+        if request.endpoint and request.endpoint == 'static':
+            return
+
+        if current_user.is_authenticated and 'last_activity_time' in session:
             last_activity = session.get('last_activity_time')
             session_lifetime = app.config.get('PERMANENT_SESSION_LIFETIME')
 

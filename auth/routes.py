@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 import random
+from datetime import datetime, date
 import time
 from redis.exceptions import ConnectionError as RedisConnectionError
 from ext import bcrypt
@@ -25,62 +26,94 @@ def racine():
 def inscription():
     if current_user.is_authenticated:
         return redirect(url_for('auth.index'))
-        
+
+    # Déterminer l'étape actuelle en fonction de la progression dans la session
+    if 'registration_step3_data' in session:
+        step = 'etape4'
+    elif 'registration_step2_data' in session:
+        step = 'etape3'
+    elif 'registration_step1_data' in session:
+        step = 'etape2'
+    else:
+        step = 'etape1'
+
     if request.method == 'POST':
-        if request.form['password'] != request.form['confirm_password']:
-            flash("Les mots de passe ne correspondent pas.", "danger")
-            return render_template('inscription_etape1.html')
+        # --- Étape 1: Nom et Email ---
+        if 'email' in request.form:
+            email = request.form['email']
+            if User.get_by_email(email):
+                flash('Cet email est déjà utilisé. Veuillez en choisir un autre.', 'danger')
+                return render_template('inscription_etape1.html')
 
-        # Étape 1: Collecte des informations de base
-        user_data = {
-            'nom': request.form['last_name'],
-            'prenom': request.form['first_name'],
-            'email': request.form['email'],
-            'password': request.form['password']
-        }
+            session['registration_step1_data'] = {
+                'nom': request.form['last_name'],
+                'prenom': request.form['first_name'],
+                'email': email
+            }
+            return redirect(url_for('auth.inscription'))
 
-        # Stocker temporairement dans la session et passer à l'étape 2
-        session['registration_step1_data'] = user_data
-        return redirect(url_for('auth.inscription_profil'))
-            
+        # --- Étape 2: Date de naissance ---
+        elif 'naissance' in request.form:
+            try:
+                dob_str = request.form['naissance']
+                dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+                today = date.today()
+                age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+                if age < 13:
+                    flash("Vous devez avoir au moins 13 ans pour vous inscrire.", "danger")
+                    return render_template('inscription_etape2.html')
+            except ValueError:
+                flash("Date de naissance invalide.", "danger")
+                return render_template('inscription_etape2.html')
+
+            step1_data = session.get('registration_step1_data', {})
+            session['registration_step2_data'] = {
+                **step1_data,
+                'postnom': request.form.get('middle_name'),
+                'naissance': dob_str,
+                'adresse': request.form.get('adresse')
+            }
+            return redirect(url_for('auth.inscription'))
+
+        # --- Étape 3: Boutique (Optionnel) ---
+        elif 'nom_boutique' in request.form:
+            step2_data = session.get('registration_step2_data', {})
+            session['registration_step3_data'] = {
+                **step2_data,
+                'nom_boutique': request.form.get('nom_boutique'),
+                'description': request.form.get('description')
+            }
+            return redirect(url_for('auth.inscription'))
+
+        # --- Étape 4: Mot de passe et finalisation ---
+        elif 'password' in request.form:
+            if request.form['password'] != request.form['confirm_password']:
+                flash("Les mots de passe ne correspondent pas.", "danger")
+                return render_template('inscription_etape4.html')
+
+            step3_data = session.get('registration_step3_data', {})
+            full_user_data = {
+                **step3_data,
+                'password': request.form['password']
+            }
+
+            if process_registration(full_user_data):
+                session.pop('registration_step3_data', None)
+                session.pop('registration_step1_data', None)
+                session.pop('registration_step2_data', None)
+                return redirect(url_for('auth.verify'))
+            else:
+                # process_registration flashera l'erreur (ex: complexité mdp)
+                return render_template('inscription_etape3.html')
+
+    # Affichage de la bonne page en fonction de l'étape
+    if step == 'etape4':
+        return render_template('inscription_etape4.html')
+    if step == 'etape3':
+        return render_template('inscription_etape3.html')
+    if step == 'etape2':
+        return render_template('inscription_etape2.html')
     return render_template('inscription_etape1.html')
-
-@auth_bp.route('/inscription/profil', methods=['GET', 'POST'])
-def inscription_profil():
-    if current_user.is_authenticated:
-        return redirect(url_for('auth.index'))
-
-    # S'assurer que l'utilisateur a bien complété l'étape 1
-    if 'registration_step1_data' not in session:
-        flash("Veuillez commencer par la première étape de l'inscription.", "warning")
-        return redirect(url_for('auth.inscription'))
-
-    if request.method == 'POST':
-        # Vérifier si la politique de confidentialité a été acceptée
-        if 'privacy_policy' not in request.form:
-            flash("Vous devez accepter la politique de confidentialité pour continuer.", "danger")
-            return render_template('inscription_etape2.html')
-
-        # Fusionner les données de l'étape 1 et 2
-        step1_data = session.get('registration_step1_data', {})
-        full_user_data = {
-            **step1_data, # Opérateur de décomposition de dictionnaire
-            'postnom': request.form.get('middle_name'),
-            'naissance': request.form.get('naissance'),
-            'adresse': request.form.get('adresse'),
-            'nom_boutique': request.form.get('nom_boutique'),
-            'description': request.form.get('description')
-        }
-
-        # Appeler le service de traitement avec les données complètes
-        if process_registration(full_user_data):
-            session.pop('registration_step1_data', None) # Nettoyer la session
-            return redirect(url_for('auth.verify')) # Rediriger vers la vérification OTP
-        else:
-            # Si le service a flashé une erreur (ex: email déjà pris), on reste sur l'étape 2
-            return render_template('inscription_etape2.html')
-            
-    return render_template('inscription_etape2.html')
 
 @auth_bp.route('/verify')
 def verify():

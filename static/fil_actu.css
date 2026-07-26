@@ -132,6 +132,15 @@ main {
       margin-top: 4px;
     }
 
+.product-category {
+      font-size: 12px;
+      color: #fff;
+      background-color: #4b0082; /* Violet pour correspondre au thème */
+      padding: 2px 8px;
+      border-radius: 10px;
+      display: inline-block; /* Pour que le padding s'applique correctement */
+      margin-top: 8px;
+}
 
 /* Responsive Mobile */
 @media (max-width: 768px) {

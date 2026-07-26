@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription (2/4) - Elikya</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth_style.css') }}">
+</head>
+<body>
+
+    <div class="auth-container">
+        <h1>Informations personnelles</h1>
+
+        <!-- Barre de progression -->
+        <div class="progress-bar">
+            <div class="progress-line" style="width: 33%;"></div>
+            <div class="progress-step active">1</div>
+            <div class="progress-step active">2</div>
+            <div class="progress-step">3</div>
+            <div class="progress-step">4</div>
+        </div>
+
+        <!-- Affichage des messages flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('auth.inscription') }}" method="POST">
+            <!-- Ajout du jeton CSRF -->
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="middle_name">Post-nom (Optionnel)</label>
+                <input type="text" id="middle_name" name="middle_name">
+            </div>
+            <div class="form-group">
+                <label for="naissance">Date de naissance</label>
+                <input type="date" id="naissance" name="naissance" required>
+                <small>Vous devez avoir au moins 13 ans.</small>
+            </div>
+            <div class="form-group">
+                <label for="adresse">Adresse (Optionnel)</label>
+                <input type="text" id="adresse" name="adresse">
+            </div>
+            <button type="submit" class="btn">Suivant</button>
+        </form>
+    </div>
+
+</body>
+</html>

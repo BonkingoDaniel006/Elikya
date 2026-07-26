@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscription (3/4) - Elikya</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='auth_style.css') }}">
+</head>
+<body>
+
+    <div class="auth-container">
+        <h1>Créer une boutique (Optionnel)</h1>
+        <p class="subtitle">Vous pouvez passer cette étape si vous ne souhaitez pas vendre de produits.</p>
+
+        <!-- Barre de progression -->
+        <div class="progress-bar">
+            <div class="progress-line" style="width: 66%;"></div>
+            <div class="progress-step active">1</div>
+            <div class="progress-step active">2</div>
+            <div class="progress-step active">3</div>
+            <div class="progress-step">4</div>
+        </div>
+        
+        <!-- Affichage des messages flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('auth.inscription') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="form-group">
+                <label for="nom_boutique">Nom de la boutique</label>
+                <input type="text" id="nom_boutique" name="nom_boutique">
+            </div>
+            <div class="form-group">
+                <label for="description">Description de la boutique</label>
+                <textarea id="description" name="description" rows="3"></textarea>
+            </div>
+            <button type="submit" class="btn">Suivant</button>
+        </form>
+    </div>
+
+</body>
+</html>
