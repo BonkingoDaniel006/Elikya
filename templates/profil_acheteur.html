@@ -119,14 +119,20 @@
                 <!-- Section Sécurité -->
                 <div class="form-group full-width" style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 10px;">
                     <label for="new_password">Nouveau mot de passe (laisser vide pour ne pas changer)</label>
-                    <input type="password" id="new_password" name="new_password" class="modal-input">
+                    <div class="password-wrapper">
+                        <input type="password" id="new_password" name="new_password" class="modal-input">
+                        <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('new_password')"></i>
+                    </div>
                 </div>
 
                 <div class="form-group full-width">
                     <label for="current_password">
                         <i class="fa-solid fa-lock"></i> Mot de passe actuel (requis pour enregistrer)
                     </label>
-                    <input type="password" id="current_password" name="current_password" class="modal-input" required>
+                    <div class="password-wrapper">
+                        <input type="password" id="current_password" name="current_password" class="modal-input" required>
+                        <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('current_password')"></i>
+                    </div>
                 </div>
             </div>
 
@@ -173,6 +179,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 reader.readAsDataURL(file);
             }
         });
+    }
+
+    // Fonction pour basculer la visibilité du mot de passe
+    window.togglePasswordVisibility = function(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling;
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
     }
 });
 </script>

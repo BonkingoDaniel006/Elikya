@@ -93,6 +93,26 @@ body {
     text-align: left;
 }
 
+/* Conteneur pour le champ mot de passe et l'icône oeil */
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-wrapper input {
+    padding-right: 40px; /* Espace pour l'icône */
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    cursor: pointer;
+    color: #999;
+    background: none;
+    border: none;
+}
+
 .form-group label {
     display: block;
     margin-bottom: 8px;
