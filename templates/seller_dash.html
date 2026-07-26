@@ -317,7 +317,10 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"> <!-- CHAMP CSRF AJOUTÉ -->
             
               <div id="passwordStep" style="display:none;">
-                  <input type="password" name="password" id="deletePassword" placeholder="Entrez votre mot de passe" class="modal-input" required>
+                  <div class="password-wrapper">
+                    <input type="password" name="password" id="deletePassword" placeholder="Entrez votre mot de passe" class="modal-input" required>
+                    <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('deletePassword')"></i>
+                  </div>
               </div>
 
               <div class="modal-actions">
@@ -358,7 +361,10 @@
 
                 <div id="updatePasswordStep" style="display:none;">
                   <p id="updateModalText" style="color: #666; font-size: 0.9rem;">Sécurité : Veuillez confirmer votre identité pour enregistrer les modifications.</p>
-                  <input type="password" name="password" id="updatePassword" placeholder="Entrez votre mot de passe" class="modal-input" required>
+                  <div class="password-wrapper">
+                    <input type="password" name="password" id="updatePassword" placeholder="Entrez votre mot de passe" class="modal-input" required>
+                    <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('updatePassword')"></i>
+                  </div>
                 </div>
 
                 <div class="modal-actions">
@@ -868,6 +874,22 @@ function showDeleteNotificationModal(id) {
 
 function closeDeleteNotificationModal() {
     document.getElementById('deleteNotificationModal').style.display = 'none';
+}
+
+// --- FONCTION GLOBALE POUR VISIBILITÉ MOT DE PASSE ---
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.nextElementSibling;
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    }
 }
 </script>
 <script src="{{ url_for('static', filename='js/seller_dash.js') }}" defer></script>

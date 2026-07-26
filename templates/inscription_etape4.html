@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription (4/4) - Elikya</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='auth_style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
@@ -33,15 +34,36 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="form-group">
                 <label for="password">Mot de passe</label>
-                <input type="password" id="password" name="password" required>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required>
+                    <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('password')"></i>
+                </div>
             </div>
             <div class="form-group">
                 <label for="confirm_password">Confirmer le mot de passe</label>
-                <input type="password" id="confirm_password" name="confirm_password" required>
+                <div class="password-wrapper">
+                    <input type="password" id="confirm_password" name="confirm_password" required>
+                    <i class="fa-solid fa-eye toggle-password" onclick="togglePasswordVisibility('confirm_password')"></i>
+                </div>
             </div>
             <button type="submit" class="btn">Terminer l'inscription</button>
         </form>
     </div>
 
+<script>
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const icon = input.nextElementSibling;
+    if (input.type === "password") {
+        input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+    } else {
+        input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+    }
+}
+</script>
 </body>
 </html>
