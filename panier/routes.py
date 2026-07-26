@@ -1,6 +1,7 @@
 import logging
 
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, session
+from datetime import datetime, timedelta
 from flask_login import login_required, current_user
 from ext import csrf, get_db_connection
 from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
@@ -12,6 +13,37 @@ logger = logging.getLogger(__name__)
 panier_bp = Blueprint('panier', __name__)
 
 # --- ROUTES D'AFFICHAGE ---
+
+@panier_bp.route("/mes-commandes")
+@login_required
+def mes_commandes():
+    """Affiche l'historique des commandes de l'utilisateur."""
+    # --- DONNÉES FACTICES POUR LE DÉVELOPPEMENT ---
+    # Cette section remplace l'appel à la base de données pour éviter l'erreur.
+    commandes = [
+        {
+            'id': 101,
+            'product_name': 'Casque Gamer Pro X',
+            'product_image_url': 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=2070&auto=format&fit=crop',
+            'date_creation': datetime.now() - timedelta(days=2),
+            'etat': 'Livree'
+        },
+        {
+            'id': 102,
+            'product_name': 'Smartphone Elikya S24',
+            'product_image_url': 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?q=80&w=1780&auto=format&fit=crop',
+            'date_creation': datetime.now() - timedelta(hours=5),
+            'etat': 'Expediee'
+        },
+        {
+            'id': 103,
+            'product_name': 'Appareil Photo Vintage',
+            'product_image_url': 'https://images.unsplash.com/photo-1526170375885-4d8ecf77b99f?q=80&w=2070&auto=format&fit=crop',
+            'date_creation': datetime.now() - timedelta(minutes=30),
+            'etat': 'En attente'
+        }
+    ]
+    return render_template("commandes_acheteur.html", commandes=commandes, user=current_user.get_claims())
 
 @panier_bp.route("/panier", methods=["GET", "POST"])
 @login_required

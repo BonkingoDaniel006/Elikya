@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Commandes - Elikya</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='fil_actu.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .orders-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        }
+        .order-card {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            transition: box-shadow 0.3s ease;
+        }
+        .order-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .order-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            flex-shrink: 0;
+        }
+        .order-details {
+            flex-grow: 1;
+        }
+        .order-details h3 {
+            margin: 0 0 5px 0;
+            font-size: 1.1rem;
+            color: #4b0082;
+        }
+        .order-info {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        .order-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background-color: #e0e0e0;
+            color: #333;
+        }
+        .order-status.en-attente { background-color: #fff0c2; color: #7a5c00; }
+        .order-status.expediee { background-color: #d1ecf1; color: #0c5460; }
+        .order-status.livree { background-color: #d4edda; color: #155724; }
+        .track-btn {
+            background-color: #ff4081;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: background-color 0.3s ease;
+            float: right;
+        }
+        .track-btn:hover { background-color: #e03670; }
+    </style>
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <main>
+        <div class="orders-container">
+            <h1 style="color: #4b0082; text-align: center; margin-bottom: 30px;">Mes Commandes</h1>
+            {% for commande in commandes %}
+            <div class="order-card">
+                <img src="{{ commande.product_image_url }}" alt="{{ commande.product_name }}" class="order-image">
+                <div class="order-details">
+                    <h3>{{ commande.product_name }}</h3>
+                    <p class="order-info">Commande #{{ commande.id }} &bull; {{ commande.date_creation.strftime('%d %b %Y') }}</p>
+                    <span class="order-status {{ commande.etat | lower | replace(' ', '-') }}">{{ commande.etat }}</span>
+                    <a href="#" class="track-btn">Suivre la livraison</a>
+                </div>
+            </div>
+            {% else %}
+            <p style="text-align: center; color: #666;">Vous n'avez passé aucune commande pour le moment.</p>
+            {% endfor %}
+        </div>
+    </main>
+
+    {% include 'footer.html' %}
+</body>
+</html>

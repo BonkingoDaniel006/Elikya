@@ -2,6 +2,7 @@ import logging
 from flask import Flask, session, flash, redirect, url_for, request
 from config import Config
 from flask_login import current_user, logout_user
+from datetime import datetime
 import time 
 from ext import bcrypt, login_manager, mail, csrf, init_db_pool, init_redis_client # Importer les initialiseurs
 from ext import get_db_connection # S'assurer que get_db_connection est importé si utilisé ailleurs
@@ -43,6 +44,12 @@ def create_app():
                     flash("Votre session a expiré pour inactivité. Veuillez vous reconnecter.", "info")
                     return redirect(url_for('auth.connexion'))
             session['last_activity_time'] = time.time()
+
+    @app.context_processor
+    def inject_now():
+        """Rend la fonction now() disponible dans tous les templates."""
+        # Utiliser datetime.utcnow pour être indépendant du fuseau horaire du serveur
+        return {'now': datetime.utcnow}
 
     # Vérification des variables critiques au démarrage
     
