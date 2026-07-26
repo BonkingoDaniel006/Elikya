@@ -5,79 +5,6 @@ body {
       color: #333;
     }
 
-header {
-      background: linear-gradient(to right, #ffdde1, #c8b6ff);
-      padding: 10px 20px;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1001; /* Doit être supérieur aux onglets */
-      gap: 10px;
-    }
-
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.logo-container {
-  padding-bottom: 5px;
-  transition: border-bottom 0.3s ease;
-}
-
-.logo-container.active-home {
-  border-bottom: 4px solid #ff4081; /* Harmonisé à 4px */
-}
-
-.search-bar {
-      flex: 1;
-      margin: 0 20px;
-      margin-top: -5px; /* Monte légèrement la barre */
-    }
-
-/* Navigation Menu */
-.nav-menu {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-}
-
-.nav-list {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  gap: 20px;
-  align-items: center;
-}
-
-.nav-item {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  color: #4b0082;
-  font-weight: 500;
-  gap: 8px;
-}
-
-.nav-icon {
-  width: 25px;
-  height: 25px;
-}
-
-/* Hamburger Menu Hidden by default */
-.menu-cb { display: none; }
-.hamburger {
-  display: none;
-  cursor: pointer;
-  font-size: 24px;
-  color: #4b0082;
-}
-
 main {
       padding: 30px 20px;
     }
@@ -140,35 +67,6 @@ main {
       border-radius: 10px;
       display: inline-block; /* Pour que le padding s'applique correctement */
       margin-top: 8px;
-}
-
-/* Responsive Mobile */
-@media (max-width: 768px) {
-  .hamburger { display: block; }
-  
-  .nav-menu {
-    display: none;
-    width: 100%;
-    background: #fdf2f4;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    padding: 20px;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-  }
-
-  .nav-list {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .menu-cb:checked ~ .nav-menu {
-    display: flex;
-  }
-  
-  .search-bar {
-    margin: 10px 0;
-  }
 }
 
 /* Barre d'onglets pour les profils */
