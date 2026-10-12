@@ -35,15 +35,39 @@ class Panier():
         }
     @classmethod
     def get_panier(cls, user_id):
-        with db_session(dictionary=True) as (_, cursor):
-            # Suppression de ORDER BY created_at DESC au cas où la colonne n'existerait pas
-            cursor.execute("SELECT * FROM panier WHERE buyer_id = %s", (user_id,))
-            cart_items = cursor.fetchall()
-        total = sum(
-            float(str(item.get("prix_total", 0)).replace(',', '.'))
-            for item in cart_items
-        )
+        cart_items, total, _ = cls.get_panier_page(user_id)
         return cart_items, total
+
+    @classmethod
+    def get_panier_page(cls, user_id, after_id=None, limit=25):
+        limit = max(1, min(int(limit), 50))
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(
+                "SELECT COALESCE(SUM(prix_total), 0) AS total FROM panier WHERE buyer_id = %s",
+                (user_id,)
+            )
+            total_row = cursor.fetchone()
+            query = """
+                SELECT id, buyer_id, buyer_first_name, buyer_last_name,
+                       product_id, product_name, product_price,
+                       product_description, product_image_url, seller_id,
+                       seller_name, quantite, prix_total, categorie
+                FROM panier WHERE buyer_id = %s
+            """
+            params = [user_id]
+            if after_id is not None:
+                query += " AND id < %s"
+                params.append(after_id)
+            query += " ORDER BY id DESC LIMIT %s"
+            params.append(limit + 1)
+            cursor.execute(query, tuple(params))
+            cart_items = cursor.fetchall()
+
+        has_more = len(cart_items) > limit
+        cart_items = cart_items[:limit]
+        next_cursor = cart_items[-1]["id"] if has_more else None
+        total = float(total_row["total"]) if total_row and total_row["total"] else 0
+        return cart_items, total, next_cursor
 
     @classmethod
     def clear_panier(cls, user_id):

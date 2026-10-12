@@ -6,6 +6,7 @@ from flask_login import login_required, current_user
 from ext import csrf, db_session
 from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
 from services.payment_service import initiate_remote_payment
+from services.pagination import parse_cursor
 from werkzeug.exceptions import ServiceUnavailable
 
 # Configuration d'un logger si ce n'est pas déjà fait
@@ -50,7 +51,10 @@ def mes_commandes():
 @login_required
 def panier():
     """Affiche le panier de l'utilisateur."""
-    cart_items, total = Panier.get_panier(current_user.id)
+    cart_items, total, cart_next_cursor = Panier.get_panier_page(
+        current_user.id,
+        after_id=parse_cursor(request.args.get("cart_after"))
+    )
 
     if request.method == "POST":
         payment_method = request.form.get("payment")
@@ -67,7 +71,13 @@ def panier():
             pass # Mettez ici la logique pour le paiement cash
 
     user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
-    return render_template("paiement.html", user=user_info, cart_items=cart_items, cart_total=total)
+    return render_template(
+        "paiement.html",
+        user=user_info,
+        cart_items=cart_items,
+        cart_total=total,
+        cart_next_cursor=cart_next_cursor
+    )
 
 
 @panier_bp.route("/modifier_article/<int:cart_id>", methods=["PATCH"])

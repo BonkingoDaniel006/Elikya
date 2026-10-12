@@ -94,6 +94,11 @@
     </a>
     {% endfor %}
   </div>
+  {% if next_cursor %}
+  <div class="pagination">
+    <a href="{{ url_for('auth.index', cursor=next_cursor) }}">Produits suivants</a>
+  </div>
+  {% endif %}
 </main>
 {% include 'footer.html' %}
 

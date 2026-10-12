@@ -87,6 +87,11 @@
       </div>
     {% endfor %}
   </div>
+  {% if next_cursor %}
+  <div class="pagination">
+    <a href="{{ url_for('produit.search', q=query, cursor=next_cursor) }}">Résultats suivants</a>
+  </div>
+  {% endif %}
 </main>
 
 <footer></footer>
@@ -94,5 +99,4 @@
 <script src="{{ url_for('static', filename='js/search.js') }}" defer></script>
 </body>
 </html>
-
 

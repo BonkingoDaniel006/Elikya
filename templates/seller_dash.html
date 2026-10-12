@@ -283,6 +283,12 @@
             </tbody>
           </table>
         </div>
+        {% if produits_next_cursor %}
+        <a class="inline-flex mt-4 px-4 py-2 rounded-lg bg-purple-600 text-white"
+           href="{{ url_for('seller.seller_dashboard', tab='products', products_after=produits_next_cursor) }}">
+          Produits suivants
+        </a>
+        {% endif %}
 
         <!-- Modale pour VOIR le produit -->
         <div id="viewProductModal" class="modal-overlay">
@@ -503,6 +509,12 @@
             </tbody>
           </table>
         </div>
+        {% if commandes_next_cursor %}
+        <a class="inline-flex mt-4 px-4 py-2 rounded-lg bg-purple-600 text-white"
+           href="{{ url_for('seller.seller_dashboard', tab='orders', orders_after=commandes_next_cursor) }}">
+          Commandes suivantes
+        </a>
+        {% endif %}
 
         <!-- Modale pour VOIR la commande -->
         <div id="viewOrderModal" class="modal-overlay">
@@ -608,6 +620,12 @@
             {% endfor %}
           </div>
         </div>
+        {% if notifications_next_cursor %}
+        <a class="inline-flex mt-4 px-4 py-2 rounded-lg bg-purple-600 text-white"
+           href="{{ url_for('seller.seller_dashboard', tab='notifications', notifications_after=notifications_next_cursor) }}">
+          Notifications suivantes
+        </a>
+        {% endif %}
 
         <!-- Modale pour VOIR la notification -->
         <div id="viewNotificationModal" class="modal-overlay">

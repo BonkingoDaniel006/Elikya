@@ -7,6 +7,7 @@ from produits.models import Details_produit, Produits, calculer_prix_affiche
 from produits.models import Ajouter_produit
 from produits.models import Suprimer_produit, Produits
 from produits.models import Modifier_produit
+from services.pagination import parse_cursor
 
 
 
@@ -204,6 +205,13 @@ def search():
     if not query:
         return redirect(url_for('auth.index'))
 
-    produits_trouves = Produits.search(query)
+    after_id = parse_cursor(request.args.get("cursor"))
+    produits_trouves, next_cursor = Produits.search_page(query, after_id=after_id)
     user_info = current_user.get_claims() if current_user.is_authenticated else None
-    return render_template("search_results.html", produits=produits_trouves, query=query, user=user_info)
+    return render_template(
+        "search_results.html",
+        produits=produits_trouves,
+        query=query,
+        next_cursor=next_cursor,
+        user=user_info
+    )

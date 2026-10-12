@@ -15,37 +15,20 @@
 <main>
   <h2>Notifications</h2>
 
+  {% for notification in notifications %}
   <div class="notification">
-    <img src="boutique1.jpg" alt="Boutique KasaTech">
     <div class="notification-content">
-      <p>Nouvelle Commande : <strong>iphone17 Normal.</strong></p>
-      <div class="time">Il y a 2h</div>
+      <p>{{ notification.title }}</p>
+      <p>{{ notification.content }}</p>
+      <div class="time">{{ notification.created_at.strftime('%d/%m/%Y %H:%M') }}</div>
     </div>
   </div>
-
-  <div class="notification">
-    <img src="boutique2.jpg" alt="Boutique TechWorld">
-    <div class="notification-content">
-      <p>Avis sur produits : <strong>Casque Gaming</strong> </p>
-      <div class="time">Hier</div>
-    </div>
-  </div>
-
-  <div class="notification">
-    <img src="produit1.jpg" alt="Produit PS5">
-    <div class="notification-content">
-      <p>Réponse à votre commentaire sur <strong>PS5 Pro</strong> </p>
-      <div class="time">Il y a 3h</div>
-    </div>
-  </div>
-
-  <div class="notification">
-    <img src="produit2.jpg" alt="Casque Gaming">
-    <div class="notification-content">
-      <p>Nouvelle Commande: <strong>Casque Gaming</strong></p>
-      <div class="time">Il y a 1h</div>
-    </div>
-  </div>
+  {% else %}
+  <p>Aucune notification pour le moment.</p>
+  {% endfor %}
+  {% if next_cursor %}
+  <a href="{{ url_for('notification.notifications', cursor=next_cursor) }}">Notifications suivantes</a>
+  {% endif %}
 
 </main>
 

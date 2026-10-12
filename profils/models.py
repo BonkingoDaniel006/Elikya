@@ -1,4 +1,5 @@
 from ext import db_session
+from panier.models import Panier
 import os
 import uuid
 from werkzeug.datastructures import FileStorage
@@ -61,15 +62,12 @@ class Buyer():
     
     @classmethod
     def get_panier(cls, user_id):
-        with db_session(dictionary=True) as (_, cursor):
-            # Suppression de ORDER BY created_at DESC au cas où la colonne n'existerait pas
-            cursor.execute("SELECT * FROM panier WHERE buyer_id = %s", (user_id,))
-            cart_items = cursor.fetchall()
-        total = sum(
-            float(str(item.get("prix_total", 0)).replace(',', '.'))
-            for item in cart_items
-        )
+        cart_items, total, _ = Panier.get_panier_page(user_id)
         return cart_items, total
+
+    @classmethod
+    def get_panier_page(cls, user_id, after_id=None, limit=25):
+        return Panier.get_panier_page(user_id, after_id=after_id, limit=limit)
     
     @classmethod
     def modifier(cls, id, prenom, nom, postnom, profil, adresse, hashed_new_password=None):
@@ -165,23 +163,84 @@ class Seller ():
         return None
     @classmethod
     def get_produits(cls, user_id):
-        with db_session(dictionary=True) as (_, cursor):
-            cursor.execute("SELECT * FROM produits WHERE seller_id = %s", (user_id,))
-            produits = cursor.fetchall()
+        produits, _ = cls.get_produits_page(user_id)
         return produits
+
+    @classmethod
+    def get_produits_page(cls, user_id, after_id=None, limit=25):
+        limit = max(1, min(int(limit), 50))
+        query = """
+            SELECT id, seller_id, name, price, description, image_url, categorie
+            FROM produits WHERE seller_id = %s
+        """
+        params = [user_id]
+        if after_id is not None:
+            query += " AND id < %s"
+            params.append(after_id)
+        query += " ORDER BY id DESC LIMIT %s"
+        params.append(limit + 1)
+
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(query, tuple(params))
+            produits = cursor.fetchall()
+        has_more = len(produits) > limit
+        produits = produits[:limit]
+        next_cursor = produits[-1]["id"] if has_more else None
+        return produits, next_cursor
     
     @classmethod
     def get_commandes(cls, user_id):
-        with db_session(dictionary=True) as (_, cursor):
-            cursor.execute("SELECT * FROM commande WHERE seller_id = %s", (user_id,))
-            commandes = cursor.fetchall()
+        commandes, _ = cls.get_commandes_page(user_id)
         return commandes
+
+    @classmethod
+    def get_commandes_page(cls, user_id, after_id=None, limit=25):
+        limit = max(1, min(int(limit), 50))
+        query = """
+            SELECT id, seller_id, buyer_first_name, buyer_last_name,
+                   date_creation, prix_total, etat, product_name,
+                   quantite, product_price, product_image_url
+            FROM commande WHERE seller_id = %s
+        """
+        params = [user_id]
+        if after_id is not None:
+            query += " AND id < %s"
+            params.append(after_id)
+        query += " ORDER BY id DESC LIMIT %s"
+        params.append(limit + 1)
+
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(query, tuple(params))
+            commandes = cursor.fetchall()
+        has_more = len(commandes) > limit
+        commandes = commandes[:limit]
+        next_cursor = commandes[-1]["id"] if has_more else None
+        return commandes, next_cursor
     
     @classmethod
     def get_for_user(cls, user_id):
-        """Récupère toutes les notifications pour un utilisateur, triées par date."""
-        query = "SELECT * FROM notifications WHERE user_id = %s ORDER BY created_at DESC"
-        with db_session(dictionary=True) as (_, cursor):
-            cursor.execute(query, (user_id,))
-            notifications = cursor.fetchall()
+        """Récupère la première page de notifications pour compatibilité."""
+        notifications, _ = cls.get_for_user_page(user_id)
         return notifications
+
+    @classmethod
+    def get_for_user_page(cls, user_id, after_id=None, limit=25):
+        limit = max(1, min(int(limit), 50))
+        query = """
+            SELECT id, user_id, type, title, content, is_read, created_at
+            FROM notifications WHERE user_id = %s
+        """
+        params = [user_id]
+        if after_id is not None:
+            query += " AND id < %s"
+            params.append(after_id)
+        query += " ORDER BY id DESC LIMIT %s"
+        params.append(limit + 1)
+
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(query, tuple(params))
+            notifications = cursor.fetchall()
+        has_more = len(notifications) > limit
+        notifications = notifications[:limit]
+        next_cursor = notifications[-1]["id"] if has_more else None
+        return notifications, next_cursor

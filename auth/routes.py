@@ -9,6 +9,7 @@ from ext import get_redis_client, db_session
 from auth.models import User # Gardez cette ligne
 from produits.models import Produits # MODIFICATION: Importer depuis produits.models
 from auth.services import process_registration, process_otp_validation
+from services.pagination import parse_cursor
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -190,13 +191,28 @@ def connexion():
 @auth_bp.route('/index')
 @login_required
 def index():
+    after_id = parse_cursor(request.args.get("cursor"))
+    limit = 24
+    query = """
+        SELECT p.id, p.seller_id, p.name, p.price, p.description,
+               p.image_url, p.categorie, u.nom_boutique
+        FROM produits p
+        JOIN users u ON p.seller_id = u.id
+    """
+    params = []
+    if after_id is not None:
+        query += " WHERE p.id < %s"
+        params.append(after_id)
+    query += " ORDER BY p.id DESC LIMIT %s"
+    params.append(limit + 1)
+
     with db_session(dictionary=True) as (_, cursor):
-        cursor.execute("""
-            SELECT p.*, u.nom_boutique
-            FROM produits p
-            JOIN users u ON p.seller_id = u.id
-        """)
+        cursor.execute(query, tuple(params))
         produits = cursor.fetchall()
+
+    has_more = len(produits) > limit
+    produits = produits[:limit]
+    next_cursor = min((produit["id"] for produit in produits), default=None) if has_more else None
     random.shuffle(produits)
     claims = current_user.get_claims()
     
@@ -204,6 +220,7 @@ def index():
         "index.html",
         name=claims.get("first_name"),
         produits=produits,
+        next_cursor=next_cursor,
         user=claims
     )
 @auth_bp.route('/deconnexion')

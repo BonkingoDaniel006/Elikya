@@ -19,12 +19,31 @@ class Notification():
 
     @classmethod
     def get_for_user(cls, user_id):
-        """Récupère toutes les notifications pour un utilisateur, triées par date."""
-        query = "SELECT * FROM notifications WHERE user_id = %s ORDER BY created_at DESC"
-        with db_session(dictionary=True) as (_, cursor):
-            cursor.execute(query, (user_id,))
-            notifications = cursor.fetchall()
+        """Récupère la première page de notifications pour compatibilité."""
+        notifications, _ = cls.get_for_user_page(user_id)
         return notifications
+
+    @classmethod
+    def get_for_user_page(cls, user_id, after_id=None, limit=25):
+        limit = max(1, min(int(limit), 50))
+        query = """
+            SELECT id, user_id, type, title, content, data, is_read, created_at
+            FROM notifications WHERE user_id = %s
+        """
+        params = [user_id]
+        if after_id is not None:
+            query += " AND id < %s"
+            params.append(after_id)
+        query += " ORDER BY id DESC LIMIT %s"
+        params.append(limit + 1)
+
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(query, tuple(params))
+            notifications = cursor.fetchall()
+        has_more = len(notifications) > limit
+        notifications = notifications[:limit]
+        next_cursor = notifications[-1]["id"] if has_more else None
+        return notifications, next_cursor
 
     @classmethod
     def mark_as_read(cls, notification_id, user_id):
