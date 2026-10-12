@@ -64,6 +64,13 @@ body {
     color: #555;
 }
 
+.price-note {
+    margin: 8px 0 0;
+    color: #666;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
 .form-group input,
 .form-group textarea,
 .form-group select {

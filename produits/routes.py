@@ -3,7 +3,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from ext import bcrypt, mail, get_db_connection
 from auth.models import User
 from produits.models import Add_panier
-from produits.models import Details_produit, Produits
+from produits.models import Details_produit, Produits, calculer_prix_affiche
 from produits.models import Ajouter_produit
 from produits.models import Suprimer_produit, Produits
 from produits.models import Modifier_produit
@@ -88,6 +88,12 @@ def ajouter_produit():
     # On récupère le FICHIER et non le texte
     image_file = request.files.get("image_url")
     seller_id = user_info.get("id")
+
+    try:
+        price = calculer_prix_affiche(price)
+    except ValueError:
+        flash("Veuillez saisir un prix valide et non négatif.", "danger")
+        return redirect(url_for('produit.ajouter_produit'))
 
     result = Ajouter_produit.ajouter(
         id=None, 

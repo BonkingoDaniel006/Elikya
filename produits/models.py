@@ -1,8 +1,28 @@
 from ext import get_db_connection
 import os
 import uuid
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from werkzeug.datastructures import FileStorage
 import random
+
+
+def calculer_prix_affiche(price):
+    """Applique la commission de la plateforme au prix saisi par le vendeur."""
+    cent = Decimal("0.01")
+    try:
+        prix_saisi = Decimal(str(price).replace(",", "."))
+        if not prix_saisi.is_finite() or prix_saisi < 0:
+            raise ValueError("Le prix doit être un nombre non négatif.")
+        prix_saisi = prix_saisi.quantize(cent, rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError) as exc:
+        raise ValueError("Le prix doit être un nombre positif valide.") from exc
+
+    if prix_saisi < Decimal("600"):
+        return Decimal("620.00")
+
+    return (prix_saisi * Decimal("1.02")).quantize(
+        cent, rounding=ROUND_HALF_UP
+    )
 
 
 class Produits():
