@@ -82,6 +82,6 @@ def load_user(user_id):
 
 if __name__ == '__main__':
     app = create_app()
-    
-    # On utilise directement la variable de configuration dédiée au debug
-    app.run(debug=app.config['FLASK_DEBUG'])
+    if not app.config['FLASK_DEBUG']:
+        raise SystemExit("Lancez l'application en production avec Gunicorn.")
+    app.run(debug=True)

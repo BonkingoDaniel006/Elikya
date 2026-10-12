@@ -10,11 +10,11 @@ __pycache__/
 
 instance/
 .pytest_cache/
+logs/
 
 site-pour-vente-de-fleur/
 
 # Fichiers uploadés par les utilisateurs
 static/uploads/
 
-* .pyc 
-
+*.py[cod]
