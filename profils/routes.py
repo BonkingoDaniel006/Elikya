@@ -3,6 +3,7 @@ from flask_login import login_required, current_user
 from ext import bcrypt
 from profils.models import Buyer
 from profils.models import Seller
+from services.pagination import parse_cursor
 
 buyer_bp = Blueprint('buyer', __name__)
 
@@ -43,16 +44,15 @@ def profil_acheteur():
 
         return redirect(url_for('buyer.profil_acheteur'))
 
-  
-    cart_items, total = Buyer.get_panier(current_user.id)
-    
-
     buyer_obj = Buyer.get_by_id(current_user.id)
     
 
     user_info = buyer_obj.get_claims() if buyer_obj else {}
     
-    return render_template("profil_acheteur.html", user=user_info, cart_items=cart_items, cart_total=total)
+    return render_template(
+        "profil_acheteur.html",
+        user=user_info,
+    )
 
 
 seller_bp = Blueprint('seller', __name__, template_folder='.')
@@ -62,11 +62,29 @@ seller_bp = Blueprint('seller', __name__, template_folder='.')
 @seller_bp.route("/seller_dashboard")
 @login_required
 def seller_dashboard():
-    produits = Seller.get_produits(current_user.id)
-    commandes = Seller.get_commandes(current_user.id)
-    notifications = Seller.get_for_user(current_user.id)
+    produits, produits_next_cursor = Seller.get_produits_page(
+        current_user.id,
+        after_id=parse_cursor(request.args.get("products_after"))
+    )
+    commandes, commandes_next_cursor = Seller.get_commandes_page(
+        current_user.id,
+        after_id=parse_cursor(request.args.get("orders_after"))
+    )
+    notifications, notifications_next_cursor = Seller.get_for_user_page(
+        current_user.id,
+        after_id=parse_cursor(request.args.get("notifications_after"))
+    )
     seller_obj = Seller.get_by_id(current_user.id)
     
 
     user_info = seller_obj.get_claims() if seller_obj else {}
-    return render_template("seller_dash.html", user=user_info, produits=produits, commandes=commandes, notifications=notifications)
+    return render_template(
+        "seller_dash.html",
+        user=user_info,
+        produits=produits,
+        produits_next_cursor=produits_next_cursor,
+        commandes=commandes,
+        commandes_next_cursor=commandes_next_cursor,
+        notifications=notifications,
+        notifications_next_cursor=notifications_next_cursor
+    )

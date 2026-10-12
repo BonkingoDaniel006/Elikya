@@ -3,10 +3,11 @@ from flask_login import login_user, logout_user, login_required, current_user
 from ext import bcrypt, mail, get_db_connection
 from auth.models import User
 from produits.models import Add_panier
-from produits.models import Details_produit, Produits
+from produits.models import Details_produit, Produits, calculer_prix_affiche
 from produits.models import Ajouter_produit
 from produits.models import Suprimer_produit, Produits
 from produits.models import Modifier_produit
+from services.pagination import parse_cursor
 
 
 
@@ -63,8 +64,7 @@ def add_panier(product_id):
         seller_id=produit.seller_id,
         seller_name=produit.seller_name,
         quantite=quantite,
-        prix_total=prix_total,
-        categorie=produit.categorie
+        prix_total=prix_total
     )
     
     flash(f"{produit.name} ajouté au panier !", "success")
@@ -88,6 +88,12 @@ def ajouter_produit():
     # On récupère le FICHIER et non le texte
     image_file = request.files.get("image_url")
     seller_id = user_info.get("id")
+
+    try:
+        price = calculer_prix_affiche(price)
+    except ValueError:
+        flash("Veuillez saisir un prix valide et non négatif.", "danger")
+        return redirect(url_for('produit.ajouter_produit'))
 
     result = Ajouter_produit.ajouter(
         id=None, 
@@ -198,6 +204,13 @@ def search():
     if not query:
         return redirect(url_for('auth.index'))
 
-    produits_trouves = Produits.search(query)
+    after_id = parse_cursor(request.args.get("cursor"))
+    produits_trouves, next_cursor = Produits.search_page(query, after_id=after_id)
     user_info = current_user.get_claims() if current_user.is_authenticated else None
-    return render_template("search_results.html", produits=produits_trouves, query=query, user=user_info)
+    return render_template(
+        "search_results.html",
+        produits=produits_trouves,
+        query=query,
+        next_cursor=next_cursor,
+        user=user_info
+    )

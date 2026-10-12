@@ -46,6 +46,9 @@
         <span>Total</span>
         <span>{{ cart_total }} $</span>
       </div>
+      {% if cart_next_cursor %}
+      <a href="{{ url_for('panier.panier', cart_after=cart_next_cursor) }}">Articles suivants</a>
+      {% endif %}
   </div>
 
   <div class="checkout-section">

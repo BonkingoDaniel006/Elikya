@@ -4,6 +4,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "orders.db"
+ORDER_COLUMNS = (
+    "id, product_id, product_name, amount_cdf, phone, customer_name, "
+    "address, shwary_tx_id, status, created_at, updated_at"
+)
 
 
 def _connect():
@@ -112,14 +116,17 @@ def update_order_status(order_id, status, expected_amount=None):
 
 def get_order_by_id(order_id):
     with _connect() as conn:
-        row = conn.execute("SELECT * FROM orders WHERE id = ?", (order_id,)).fetchone()
+        row = conn.execute(
+            f"SELECT {ORDER_COLUMNS} FROM orders WHERE id = ?", (order_id,)
+        ).fetchone()
     return dict(row) if row else None
 
 
 def get_order_by_shwary_tx(shwary_tx_id):
     with _connect() as conn:
         row = conn.execute(
-            "SELECT * FROM orders WHERE shwary_tx_id = ?", (shwary_tx_id,)
+            f"SELECT {ORDER_COLUMNS} FROM orders WHERE shwary_tx_id = ?",
+            (shwary_tx_id,)
         ).fetchone()
     return dict(row) if row else None
 

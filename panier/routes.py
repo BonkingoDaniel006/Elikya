@@ -3,9 +3,12 @@ import logging
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, session
 from datetime import datetime, timedelta
 from flask_login import login_required, current_user
-from ext import csrf, get_db_connection
+from ext import csrf, db_session, limiter
 from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
 from services.payment_service import initiate_remote_payment
+from services.pagination import parse_cursor
+from werkzeug.exceptions import ServiceUnavailable
+from services.rate_limits import account_rate_limit_key
 
 # Configuration d'un logger si ce n'est pas déjà fait
 logger = logging.getLogger(__name__)
@@ -49,7 +52,10 @@ def mes_commandes():
 @login_required
 def panier():
     """Affiche le panier de l'utilisateur."""
-    cart_items, total = Panier.get_panier(current_user.id)
+    cart_items, total, cart_next_cursor = Panier.get_panier_page(
+        current_user.id,
+        after_id=parse_cursor(request.args.get("cart_after"))
+    )
 
     if request.method == "POST":
         payment_method = request.form.get("payment")
@@ -66,7 +72,13 @@ def panier():
             pass # Mettez ici la logique pour le paiement cash
 
     user_info = current_user.get_claims() if hasattr(current_user, 'get_claims') else {}
-    return render_template("paiement.html", user=user_info, cart_items=cart_items, cart_total=total)
+    return render_template(
+        "paiement.html",
+        user=user_info,
+        cart_items=cart_items,
+        cart_total=total,
+        cart_next_cursor=cart_next_cursor
+    )
 
 
 @panier_bp.route("/modifier_article/<int:cart_id>", methods=["PATCH"])
@@ -81,22 +93,22 @@ def modifier_article(cart_id):
             flash("Article retiré du panier.", "success")
             return redirect(url_for('panier.panier'))
 
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        # On vérifie que l'article appartient bien à l'utilisateur
-        cursor.execute("SELECT product_price FROM panier WHERE id = %s AND buyer_id = %s", (cart_id, current_user.id))
-        item = cursor.fetchone()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(
+                "SELECT product_price FROM panier WHERE id = %s AND buyer_id = %s",
+                (cart_id, current_user.id)
+            )
+            item = cursor.fetchone()
 
         if item:
             prix_total = quantite * float(item['product_price'])
             Modifier_panier.modifier(cart_id, quantite, prix_total)
             flash("Panier mis à jour.", "success")
+    except ServiceUnavailable:
+        raise
     except Exception as e:
         current_app.logger.error(f"Erreur modification panier: {e}")
         flash("Impossible de modifier la quantité.", "danger")
-    finally:
-        if 'cursor' in locals() and cursor: cursor.close()
-        if 'conn' in locals() and conn: conn.close()
 
     return redirect(url_for('panier.panier'))
 
@@ -109,6 +121,8 @@ def supprimer_article(cart_id):
     return jsonify({"message": "Article retiré du panier."}), 200
 
 @panier_bp.route("/paiement/mobile", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
+@limiter.limit("5 per minute", key_func=account_rate_limit_key, methods=["POST"])
 @login_required
 def mobile_money_payment():
     """Affiche le formulaire pour le paiement mobile et traite la soumission."""

@@ -1,8 +1,30 @@
-from ext import get_db_connection
+from ext import db_session
 import os
 import uuid
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 from werkzeug.datastructures import FileStorage
 import random
+
+
+def calculer_prix_affiche(price):
+    """Applique la commission de la plateforme au prix saisi par le vendeur."""
+    cent = Decimal("0.01")
+    try:
+        prix_saisi = Decimal(str(price).replace(",", "."))
+        if not prix_saisi.is_finite() or prix_saisi < 0:
+            raise ValueError("Le prix doit être un nombre non négatif.")
+        prix_saisi = prix_saisi.quantize(cent, rounding=ROUND_HALF_UP)
+    except (InvalidOperation, ValueError) as exc:
+        raise ValueError("Le prix doit être un nombre positif valide.") from exc
+
+    if prix_saisi < Decimal("1000"):
+        return (prix_saisi + Decimal("20.00")).quantize(
+            cent, rounding=ROUND_HALF_UP
+        )
+
+    return (prix_saisi * Decimal("1.02")).quantize(
+        cent, rounding=ROUND_HALF_UP
+    )
 
 
 class Produits():
@@ -16,15 +38,37 @@ class Produits():
 
     @classmethod
     def search(cls, query):
-        """Recherche des produits par nom ou description."""
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        search_query = f"%{query}%"
-        cursor.execute("SELECT p.*, u.nom_boutique FROM produits p JOIN users u ON p.seller_id = u.id WHERE p.name LIKE %s OR p.description LIKE %s", (search_query, search_query))
-        produits = cursor.fetchall()
-        cursor.close()
-        conn.close()
+        """Compatibilité : renvoie la première page de résultats."""
+        produits, _ = cls.search_page(query)
         return produits
+
+    @classmethod
+    def search_page(cls, query, after_id=None, limit=24):
+        """Recherche par curseur pour éviter de charger toute la table."""
+        limit = max(1, min(int(limit), 50))
+        search_query = f"%{query}%"
+        sql = """
+            SELECT p.id, p.seller_id, p.name, p.price, p.description,
+                   p.image_url, p.categorie, u.nom_boutique
+            FROM produits p
+            JOIN users u ON p.seller_id = u.id
+            WHERE (p.name LIKE %s OR p.description LIKE %s)
+        """
+        params = [search_query, search_query]
+        if after_id is not None:
+            sql += " AND p.id < %s"
+            params.append(after_id)
+        sql += " ORDER BY p.id DESC LIMIT %s"
+        params.append(limit + 1)
+
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(sql, tuple(params))
+            produits = cursor.fetchall()
+        has_more = len(produits) > limit
+        produits = produits[:limit]
+        next_cursor = produits[-1]["id"] if has_more else None
+        return produits, next_cursor
+
 class Details_produit():
     def __init__(self, id, seller_id, name, price, description, image_url, categorie, seller_name=None):
         self.id = id
@@ -52,11 +96,11 @@ class Details_produit():
     @classmethod
     def get_by_id(cls, product_id):
         """Récupère les détails d'un produit par son ID"""
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        try:
+        with db_session(dictionary=True) as (_, cursor):
             cursor.execute("""
-                SELECT p.*, u.nom_boutique AS seller_name 
+                SELECT p.id, p.seller_id, p.name, p.price, p.description,
+                       p.image_url, p.categorie,
+                       u.nom_boutique AS seller_name
                 FROM produits p 
                 JOIN users u ON p.seller_id = u.id 
                 WHERE p.id = %s
@@ -74,9 +118,6 @@ class Details_produit():
                     categorie=row['categorie']
                 )
             return None
-        finally:
-            cursor.close()
-            conn.close()
 
 
 class Add_panier():
@@ -116,27 +157,22 @@ class Add_panier():
     @classmethod
     def create(cls, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, 
                product_price, product_description, product_image_url, seller_id,
-               seller_name, quantite, prix_total, categorie):
+               seller_name, quantite, prix_total):
         """Insère un nouvel article dans le panier (table panier)"""
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             cursor.execute("""
                 INSERT INTO panier (
                     buyer_id, buyer_first_name, buyer_last_name,
                     product_id, product_name, product_price, product_description, product_image_url,
-                    seller_id, seller_name, quantite, prix_total, categorie
+                    seller_id, seller_name, quantite, prix_total
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 buyer_id, buyer_first_name, buyer_last_name,
                 product_id, product_name, product_price, product_description, product_image_url,
-                seller_id, seller_name, quantite, prix_total, categorie
+                seller_id, seller_name, quantite, prix_total
             ))
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
 
 class Ajouter_produit():
     def __init__(self, id, seller_id, name, price, description, image_url, categorie):
@@ -173,16 +209,11 @@ class Ajouter_produit():
             else:
                 return "Format de fichier non autorisé", 400
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             cursor.execute("""
                 INSERT INTO produits (id, seller_id, name, price, description, image_url, categorie)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)""", (id, seller_id, name, price, description, final_image_path, categorie))
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
 
 
 
@@ -206,14 +237,9 @@ class Suprimer_produit():
         }
     @classmethod
     def supprimer(cls, id):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             cursor.execute("DELETE FROM produits WHERE id = %s", (id,))
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
 
 
     
@@ -254,9 +280,7 @@ class Modifier_produit():
             else:
                 return "Format de fichier non autorisé", 400
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             if final_image_path:
                 # Mise à jour incluant la nouvelle image
                 cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s, image_url = %s, categorie = %s WHERE id = %s",
@@ -266,6 +290,3 @@ class Modifier_produit():
                 cursor.execute("UPDATE produits SET seller_id = %s, name = %s, price = %s, description = %s, categorie = %s WHERE id = %s",
                                (seller_id, name, price, description, categorie, id))
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
