@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, session, flash, redirect, url_for, request
+from flask import Flask, jsonify, session, flash, redirect, url_for, request
 from config import Config
 from flask_login import current_user, logout_user
 from datetime import datetime
@@ -71,6 +71,10 @@ def create_app():
     app.register_blueprint(panier_bp) # Cette ligne est cruciale pour activer le webhook
     app.register_blueprint(notifications_bp)
 
+    @app.errorhandler(503)
+    def handle_service_unavailable(error):
+        app.logger.warning("Service temporairement indisponible: %s", error)
+        return jsonify(error="Service temporairement indisponible"), 503
 
     return app
 

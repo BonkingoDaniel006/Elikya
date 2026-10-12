@@ -21,11 +21,17 @@ class Config:
     REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
     REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
     REDIS_DB = int(os.getenv('REDIS_DB', 0))
+    REDIS_SOCKET_TIMEOUT = float(os.getenv('REDIS_SOCKET_TIMEOUT', 1))
+    REDIS_SOCKET_CONNECT_TIMEOUT = float(os.getenv('REDIS_SOCKET_CONNECT_TIMEOUT', 1))
+    REDIS_HEALTH_CHECK_INTERVAL = int(os.getenv('REDIS_HEALTH_CHECK_INTERVAL', 30))
 
     MYSQL_HOST = os.environ.get('DB_HOST')
+    MYSQL_PORT = int(os.getenv('DB_PORT', 3306))
     MYSQL_USER = os.environ.get('DB_USER')
     MYSQL_PASSWORD = os.environ.get('DB_PASSWORD')
     MYSQL_DB = os.environ.get('DB_NAME')
+    GUNICORN_THREADS = int(os.getenv('GUNICORN_THREADS', 4))
+    DB_POOL_SIZE = int(os.getenv('DB_POOL_SIZE', GUNICORN_THREADS + 2))
     MYSQL_CURSORCLASS = 'DictCursor'
 
     # Configuration Flask-Mail (Logique de l'architecte)
