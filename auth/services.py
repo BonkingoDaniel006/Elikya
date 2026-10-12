@@ -1,11 +1,12 @@
-import os
+import html
 import secrets
 import time
-import requests
 from flask import current_app, session, flash
 import re
+from redis.exceptions import RedisError
 from auth.models import User
 from ext import bcrypt
+from services.email_queue import EmailQueueUnavailable, enqueue_email
 
 def _generer_code_verification(longueur=6):
     """Génère un code de vérification numérique sécurisé."""
@@ -25,41 +26,19 @@ def _validate_password(password):
         return "Le mot de passe est trop simple."
     return None
 
-def _envoyer_otp_brevo(email_destinataire, prenom, code_otp):
-    """Fonction utilitaire pour envoyer l'OTP via l'API HTTP de Brevo"""
-    url = "https://api.brevo.com/v3/smtp/email"
-    api_key = os.getenv("BREVO_API_KEY")
-    if not api_key:
-        current_app.logger.error("La variable d'environnement BREVO_API_KEY n'est pas configurée.")
-        return False
-
-    payload = {
-        "sender": {"name": "Elikya", "email": os.getenv("PROV_EMAIL")},
-        "to": [{"email": email_destinataire}],
-        "subject": "Code de vérification Elikya",
-        "htmlContent": f"""
-            <h3>Bonjour {prenom},</h3>
-            <p>Votre code de vérification unique est : <strong>{code_otp}</strong></p>
-            <p>Ce code expirera dans 20 minutes.</p>
-        """
-    }
-    headers = {
-        "accept": "application/json",
-        "api-key": api_key,
-        "content-type": "application/json"
-    }
-
-    try:
-        response = requests.post(url, json=payload, headers=headers, timeout=5)
-        if response.status_code == 201:
-            current_app.logger.info(f"OTP envoyé avec succès à {email_destinataire}")
-            return True
-        else:
-            current_app.logger.error(f"Erreur de l'API Brevo ({response.status_code}) : {response.text}")
-            return False
-    except Exception as e:
-        current_app.logger.error(f"Exception lors de l'envoi HTTP à Brevo : {str(e)}")
-        return False
+def _enqueue_otp_email(email_destinataire, prenom, code_otp):
+    """Place l'envoi de l'OTP en file pour ne pas bloquer la requête d'inscription."""
+    safe_prenom = html.escape(prenom or "")
+    html_content = f"""
+        <h3>Bonjour {safe_prenom},</h3>
+        <p>Votre code de vérification unique est : <strong>{code_otp}</strong></p>
+        <p>Ce code expirera dans 20 minutes.</p>
+    """
+    enqueue_email(
+        to=email_destinataire,
+        subject="Code de vérification Elikya",
+        html_content=html_content,
+    )
 
 def process_registration(form_data):
     """Traite une nouvelle demande d'inscription."""
@@ -70,7 +49,14 @@ def process_registration(form_data):
         return False
 
     verification_code = _generer_code_verification()
-    if not _envoyer_otp_brevo(form_data['email'], form_data['prenom'], verification_code):
+    try:
+        _enqueue_otp_email(
+            form_data['email'],
+            form_data['prenom'],
+            verification_code,
+        )
+    except (EmailQueueUnavailable, RedisError):
+        current_app.logger.exception("Impossible de placer l'email OTP dans la file.")
         flash("Le service d'envoi d'emails est indisponible. Veuillez réessayer plus tard.", "danger")
         return False
 

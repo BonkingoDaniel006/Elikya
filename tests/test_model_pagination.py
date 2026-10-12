@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 from notifications.models import Notification
 from panier.models import Panier
+from produits.models import Add_panier
 from profils.models import Seller
 
 
@@ -38,6 +39,17 @@ class ModelPaginationTests(unittest.TestCase):
         self.assertIn("LIMIT %s", sql)
         self.assertNotIn("SELECT *", sql)
         self.assertEqual(params, (17, 10, 3))
+
+    def test_seller_order_page_aliases_existing_reception_date(self):
+        _, _, cursor = self.run_page_query(
+            "profils.models",
+            Seller.get_commandes_page,
+            [{"id": 8}],
+            17,
+        )
+
+        sql, _ = cursor.execute.call_args.args
+        self.assertIn("date_reception AS date_creation", sql)
 
     def test_notification_page_is_bounded_and_returns_next_cursor(self):
         page, next_cursor, cursor = self.run_page_query(
@@ -74,6 +86,37 @@ class ModelPaginationTests(unittest.TestCase):
         self.assertEqual(total, 125.5)
         self.assertEqual(next_cursor, 4)
         self.assertEqual(cursor.execute.call_count, 2)
+        select_sql, _ = cursor.execute.call_args_list[1].args
+        self.assertNotIn("categorie", select_sql)
+
+    def test_cart_insert_does_not_require_category_column(self):
+        cursor = MagicMock()
+        connection = MagicMock()
+
+        @contextmanager
+        def fake_db_session():
+            yield connection, cursor
+
+        with patch("produits.models.db_session", fake_db_session):
+            Add_panier.create(
+                buyer_id=3,
+                buyer_first_name="Ada",
+                buyer_last_name="Lovelace",
+                product_id=8,
+                product_name="Product",
+                product_price=10,
+                product_description="Description",
+                product_image_url="image.jpg",
+                seller_id=17,
+                seller_name="Seller",
+                quantite=1,
+                prix_total=10,
+            )
+
+        sql, params = cursor.execute.call_args.args
+        self.assertNotIn("categorie", sql)
+        self.assertEqual(len(params), 12)
+        connection.commit.assert_called_once_with()
 
 
 if __name__ == "__main__":

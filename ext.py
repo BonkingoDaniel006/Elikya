@@ -39,10 +39,8 @@ def init_redis_client(app_config_dict):
     """Initialise le client Redis."""
     global redis_client
     if redis_client is None:
-        redis_client = redis.Redis(
-            host=app_config_dict['REDIS_HOST'],
-            port=app_config_dict['REDIS_PORT'],
-            db=app_config_dict['REDIS_DB'],
+        redis_client = redis.Redis.from_url(
+            app_config_dict['REDIS_URL'],
             decode_responses=True,
             socket_timeout=app_config_dict.get('REDIS_SOCKET_TIMEOUT', 1),
             socket_connect_timeout=app_config_dict.get('REDIS_SOCKET_CONNECT_TIMEOUT', 1),

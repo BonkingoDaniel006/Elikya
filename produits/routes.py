@@ -64,8 +64,7 @@ def add_panier(product_id):
         seller_id=produit.seller_id,
         seller_name=produit.seller_name,
         quantite=quantite,
-        prix_total=prix_total,
-        categorie=produit.categorie
+        prix_total=prix_total
     )
     
     flash(f"{produit.name} ajouté au panier !", "success")

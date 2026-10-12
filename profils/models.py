@@ -200,7 +200,7 @@ class Seller ():
         limit = max(1, min(int(limit), 50))
         query = """
             SELECT id, seller_id, buyer_first_name, buyer_last_name,
-                   date_creation, prix_total, etat, product_name,
+                   date_reception AS date_creation, prix_total, etat, product_name,
                    quantite, product_price, product_image_url
             FROM commande WHERE seller_id = %s
         """

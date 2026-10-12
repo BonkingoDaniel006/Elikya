@@ -27,6 +27,7 @@ pydantic_core==2.46.4
 python-dotenv==1.2.2
 redis==8.0.1
 requests==2.34.2
+rq==2.12.0
 shwary-python==2.0.6
 stripe==15.2.0
 tenacity==9.1.4

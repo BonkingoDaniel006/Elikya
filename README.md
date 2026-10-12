@@ -24,13 +24,14 @@ L'application utilise le **Factory Pattern (Modèle d'Usine)** combiné aux **Bl
 #### ⚙️ `config.py`
 Centralise les paramètres via une classe `Config`. 
 - Utilise `python-dotenv` pour charger les variables sensibles (`.env`).
-- Configure `Flask-Mail` pour le serveur SMTP de Gmail (Port 465/SSL) afin d'assurer l'envoi sécurisé des codes de vérification.
+- Permet de choisir le transport email avec `EMAIL_PROVIDER` (`brevo` ou `smtp`) et configure Redis pour la file des emails.
 
 #### 🔌 `ext.py`
 Initialise les objets d'extension sans les lier à l'application :
 - `Bcrypt` : Pour le hachage des mots de passe (Algorithme Blowfish).
 - `LoginManager` : Gère les sessions utilisateurs et les redirections (`login_view`).
 - `Mail` : Interface pour l'envoi d'emails.
+- `RQ` : Place les emails dans la file Redis afin de ne pas bloquer une requête web sur un appel externe.
 
 #### 🚀 `app.py`
 Cœur de l'application. 
@@ -60,8 +61,8 @@ Lorsqu'un utilisateur soumet le formulaire :
 2. Un code de 6 chiffres est généré via `secrets.choice` (générateur cryptographique).
 3. **Stockage en Session :** 
     - `session['pending_user']` : Stocke temporairement les infos du formulaire.
-    - `session['otp']` : Stocke le code, le timestamp d'expiration (+120s) et le compteur de tentatives.
-4. Un email est envoyé via `Flask-Mail`.
+    - `session['otp']` : Stocke le code, le timestamp d'expiration (+20 minutes) et le compteur de tentatives.
+4. L'email OTP est placé dans la file Redis puis envoyé par le processus worker.
 
 ### Étape 2 : La Salle d'Attente (`/verify`)
 L'utilisateur est redirigé vers une page demandant le code.
@@ -108,11 +109,13 @@ CREATE TABLE users (
    pip install -r requirements.txt
    ```
 
-2. **Configuration SMTP (Gmail) :**
+2. **Configuration email :**
    - Allez sur votre compte Google -> Sécurité.
    - Activez la validation en deux étapes.
    - Créez un **"Mot de passe d'application"**.
-   - Copiez ce code de 16 caractères dans votre `.env`.
+   - Pour Gmail, configurez `EMAIL_PROVIDER=smtp`, `MAIL_SERVER`, `MAIL_PORT`, `MAIL_USE_SSL` et `MAIL_PASSWORD`.
+   - Pour Brevo, configurez `EMAIL_PROVIDER=brevo` et `BREVO_API_KEY`.
+   - Dans les deux cas, configurez `EMAIL_SENDER` (ou `PROV_EMAIL`).
 
 3. **Variables d'environnement (.env) :**
    ```env
@@ -127,7 +130,11 @@ CREATE TABLE users (
 
 4. **Exécution :**
    ```bash
-   python app.py
+   gunicorn -c gunicorn.conf.py 'app:create_app()'
+   ```
+   Démarrez aussi le worker RQ dans un processus séparé :
+   ```bash
+   python worker.py
    ```
 
 ---

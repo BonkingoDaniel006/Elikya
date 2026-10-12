@@ -51,7 +51,7 @@ class Panier():
                 SELECT id, buyer_id, buyer_first_name, buyer_last_name,
                        product_id, product_name, product_price,
                        product_description, product_image_url, seller_id,
-                       seller_name, quantite, prix_total, categorie
+                       seller_name, quantite, prix_total
                 FROM panier WHERE buyer_id = %s
             """
             params = [user_id]

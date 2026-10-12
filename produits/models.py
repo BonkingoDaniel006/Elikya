@@ -157,20 +157,20 @@ class Add_panier():
     @classmethod
     def create(cls, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, 
                product_price, product_description, product_image_url, seller_id,
-               seller_name, quantite, prix_total, categorie):
+               seller_name, quantite, prix_total):
         """Insère un nouvel article dans le panier (table panier)"""
         with db_session() as (conn, cursor):
             cursor.execute("""
                 INSERT INTO panier (
                     buyer_id, buyer_first_name, buyer_last_name,
                     product_id, product_name, product_price, product_description, product_image_url,
-                    seller_id, seller_name, quantite, prix_total, categorie
+                    seller_id, seller_name, quantite, prix_total
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, (
                 buyer_id, buyer_first_name, buyer_last_name,
                 product_id, product_name, product_price, product_description, product_image_url,
-                seller_id, seller_name, quantite, prix_total, categorie
+                seller_id, seller_name, quantite, prix_total
             ))
             conn.commit()
 
