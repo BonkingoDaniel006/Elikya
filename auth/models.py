@@ -1,8 +1,16 @@
+import json
+import logging
+
+from flask import current_app, has_app_context
 from flask_login import UserMixin
-from ext import db_session
+from redis.exceptions import RedisError
+
+from ext import db_session, get_redis_client
+
+logger = logging.getLogger(__name__)
 
 class User(UserMixin):
-    def __init__(self, id, email, password, prenom=None, nom=None, postnom=None, description=None, profil=None, adresse=None, nom_boutique=None):
+    def __init__(self, id, email, password=None, prenom=None, nom=None, postnom=None, description=None, profil=None, adresse=None, nom_boutique=None):
         self.id = id
         self.email = email
         self.password = password
@@ -39,6 +47,58 @@ class User(UserMixin):
         if row:
             return cls(**row)
         return None
+
+    @classmethod
+    def get_cached_by_id(cls, user_id):
+        cache = get_redis_client()
+        cache_key = f"user:{user_id}"
+        if cache is not None:
+            try:
+                cached = cache.get(cache_key)
+            except RedisError:
+                logger.warning("Redis indisponible pour le cache utilisateur.")
+            else:
+                if cached:
+                    try:
+                        return cls(**json.loads(cached))
+                    except (TypeError, ValueError):
+                        logger.warning("Entrée invalide dans le cache utilisateur %s.", user_id)
+                        try:
+                            cache.delete(cache_key)
+                        except RedisError:
+                            logger.warning("Impossible de supprimer une entrée Redis invalide.")
+
+        user = cls.get_by_id(user_id)
+        if user is None or cache is None:
+            return user
+
+        user_data = {
+            "id": user.id,
+            "email": user.email,
+            "prenom": user.prenom,
+            "nom": user.nom,
+            "postnom": user.postnom,
+            "description": user.description,
+            "profil": user.profil,
+            "adresse": user.adresse,
+            "nom_boutique": user.nom_boutique,
+        }
+        ttl = current_app.config.get("USER_CACHE_TTL", 60) if has_app_context() else 60
+        try:
+            cache.setex(cache_key, ttl, json.dumps(user_data))
+        except RedisError:
+            logger.warning("Impossible d'écrire l'utilisateur %s dans le cache Redis.", user_id)
+        return user
+
+    @classmethod
+    def invalidate_cache(cls, user_id):
+        cache = get_redis_client()
+        if cache is None:
+            return
+        try:
+            cache.delete(f"user:{user_id}")
+        except RedisError:
+            logger.warning("Impossible d'invalider le cache utilisateur %s.", user_id)
 
     @classmethod
     def get_by_email(cls, email):

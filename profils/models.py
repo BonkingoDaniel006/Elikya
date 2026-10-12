@@ -1,4 +1,5 @@
 from ext import db_session
+from auth.models import User
 from panier.models import Panier
 import os
 import uuid
@@ -107,6 +108,7 @@ class Buyer():
 
             cursor.execute(query, tuple(params))
             conn.commit()
+        User.invalidate_cache(id)
         return True
     
 

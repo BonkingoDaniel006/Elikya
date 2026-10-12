@@ -32,18 +32,24 @@ def create_app():
         if request.endpoint and request.endpoint == 'static':
             return
 
-        if current_user.is_authenticated and 'last_activity_time' in session:
+        if current_user.is_authenticated:
+            now = time.time()
             last_activity = session.get('last_activity_time')
+            try:
+                last_activity = float(last_activity) if last_activity is not None else None
+            except (TypeError, ValueError):
+                last_activity = None
             session_lifetime = app.config.get('PERMANENT_SESSION_LIFETIME')
 
-            if last_activity and session_lifetime:
-                elapsed_time = time.time() - last_activity
+            if last_activity is not None and session_lifetime:
+                elapsed_time = now - last_activity
                 if elapsed_time > session_lifetime.total_seconds():
                     logout_user()
                     session.clear()
                     flash("Votre session a expiré pour inactivité. Veuillez vous reconnecter.", "info")
                     return redirect(url_for('auth.connexion'))
-            session['last_activity_time'] = time.time()
+            if last_activity is None or now - last_activity >= 60:
+                session['last_activity_time'] = now
 
     @app.context_processor
     def inject_now():
@@ -81,7 +87,7 @@ def create_app():
 @login_manager.user_loader
 def load_user(user_id):
     """Fonction obligatoire pour Flask-Login permettant de recharger l'utilisateur depuis la session."""
-    return User.get_by_id(int(user_id))
+    return User.get_cached_by_id(int(user_id))
 
 
 if __name__ == '__main__':

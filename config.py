@@ -32,6 +32,7 @@ class Config:
     MYSQL_DB = os.environ.get('DB_NAME')
     GUNICORN_THREADS = int(os.getenv('GUNICORN_THREADS', 4))
     DB_POOL_SIZE = int(os.getenv('DB_POOL_SIZE', GUNICORN_THREADS + 2))
+    USER_CACHE_TTL = int(os.getenv('USER_CACHE_TTL', 60))
     MYSQL_CURSORCLASS = 'DictCursor'
 
     # Configuration Flask-Mail (Logique de l'architecte)
