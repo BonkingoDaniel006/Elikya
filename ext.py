@@ -5,6 +5,8 @@ from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 from flask_mail import Mail
 from flask_wtf.csrf import CSRFProtect
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 import mysql.connector.pooling
 from mysql.connector.errors import PoolError
 import redis
@@ -90,6 +92,20 @@ bcrypt = Bcrypt()
 login_manager = LoginManager()
 mail = Mail()
 csrf = CSRFProtect()
+limiter = Limiter(key_func=get_remote_address)
+
+
+def init_rate_limiter(app):
+    """Active le rate limiting Redis, avec repli mémoire si Redis est indisponible."""
+    app.config.update(
+        RATELIMIT_STORAGE_URI=app.config['RATELIMIT_STORAGE_URI'],
+        RATELIMIT_STORAGE_OPTIONS={
+            'socket_timeout': app.config.get('RATELIMIT_SOCKET_TIMEOUT', 0.1),
+            'socket_connect_timeout': app.config.get('RATELIMIT_SOCKET_TIMEOUT', 0.1),
+        },
+        RATELIMIT_IN_MEMORY_FALLBACK_ENABLED=True,
+    )
+    limiter.init_app(app)
 
 # Redirection automatique si un utilisateur non connecté tente d'accéder à une page protégée
 login_manager.login_view = 'auth.connexion'

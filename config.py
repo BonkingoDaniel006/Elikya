@@ -24,6 +24,11 @@ class Config:
     REDIS_SOCKET_TIMEOUT = float(os.getenv('REDIS_SOCKET_TIMEOUT', 1))
     REDIS_SOCKET_CONNECT_TIMEOUT = float(os.getenv('REDIS_SOCKET_CONNECT_TIMEOUT', 1))
     REDIS_HEALTH_CHECK_INTERVAL = int(os.getenv('REDIS_HEALTH_CHECK_INTERVAL', 30))
+    RATELIMIT_STORAGE_URI = os.getenv(
+        'RATELIMIT_STORAGE_URI',
+        f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}",
+    )
+    RATELIMIT_SOCKET_TIMEOUT = float(os.getenv('RATELIMIT_SOCKET_TIMEOUT', 0.1))
 
     MYSQL_HOST = os.environ.get('DB_HOST')
     MYSQL_PORT = int(os.getenv('DB_PORT', 3306))

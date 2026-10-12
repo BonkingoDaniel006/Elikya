@@ -3,13 +3,14 @@ from flask_login import login_user, logout_user, login_required, current_user
 import random
 from datetime import datetime, date
 import time
-from redis.exceptions import ConnectionError as RedisConnectionError
+from redis.exceptions import RedisError
 from ext import bcrypt
-from ext import get_redis_client, db_session
+from ext import get_redis_client, db_session, limiter
 from auth.models import User # Gardez cette ligne
 from produits.models import Produits # MODIFICATION: Importer depuis produits.models
 from auth.services import process_registration, process_otp_validation
 from services.pagination import parse_cursor
+from services.rate_limits import account_rate_limit_key
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -24,6 +25,8 @@ def racine():
     return redirect(url_for('auth.connexion'))
 
 @auth_bp.route('/inscription', methods=['GET', 'POST'])
+@limiter.limit("10 per hour", methods=["POST"])
+@limiter.limit("3 per hour", key_func=account_rate_limit_key, methods=["POST"])
 def inscription():
     if current_user.is_authenticated:
         return redirect(url_for('auth.index'))
@@ -126,6 +129,8 @@ def verify():
     return render_template('verify.html', expires_at=otp_data['expires_at'], email=email)
 
 @auth_bp.route('/valider_otp', methods=['POST'])
+@limiter.limit("10 per minute", methods=["POST"])
+@limiter.limit("5 per minute", key_func=account_rate_limit_key, methods=["POST"])
 def valider_otp():
     submitted_code = request.form.get('code')
     result = process_otp_validation(submitted_code)
@@ -145,6 +150,8 @@ def valider_otp():
     return redirect(url_for('auth.inscription')) # Fallback
 
 @auth_bp.route('/connexion', methods=['GET', 'POST'])
+@limiter.limit("10 per minute", methods=["POST"])
+@limiter.limit("5 per minute", key_func=account_rate_limit_key, methods=["POST"])
 def connexion():
     if current_user.is_authenticated:
         return redirect(url_for('auth.index'))
@@ -152,28 +159,28 @@ def connexion():
         email = (request.form.get('email') or '').strip()
         password = (request.form.get('password') or '').strip()
 
-        try:
-            redis = get_redis_client()
-            # Clé Redis unique pour suivre les tentatives de cet email
-            attempt_key = f"login_attempts:{email}"
-
-            # --- DÉBUT DE LA PROTECTION FORCE BRUTE ---
-            # 1. Vérifier si le compte est actuellement verrouillé
-            remaining_time = redis.ttl(attempt_key)
-            if remaining_time > 0:
-                minutes_left = int(remaining_time / 60)
-                flash(f"Trop de tentatives échouées. Compte bloqué pour encore {minutes_left} minutes.", 'danger')
-                return render_template('connexion.html')
-        except RedisConnectionError:
-            current_app.logger.critical("CRITICAL: Could not connect to Redis. Brute-force protection is disabled.")
-            redis = None # On s'assure que redis est None pour la suite
+        redis = get_redis_client()
+        attempt_key = f"login_attempts:{email}"
+        if redis is not None:
+            try:
+                remaining_time = redis.ttl(attempt_key)
+                if remaining_time > 0:
+                    minutes_left = int(remaining_time / 60)
+                    flash(f"Trop de tentatives échouées. Compte bloqué pour encore {minutes_left} minutes.", 'danger')
+                    return render_template('connexion.html')
+            except RedisError:
+                current_app.logger.warning("Redis indisponible; protection anti-brute-force temporairement réduite.")
+                redis = None
 
         user = User.get_by_email(email)
 
         if user and bcrypt.check_password_hash(user.password, password):
             # 2. En cas de succès, on réinitialise le compteur
             if redis:
-                redis.delete(attempt_key)
+                try:
+                    redis.delete(attempt_key)
+                except RedisError:
+                    current_app.logger.warning("Impossible de réinitialiser les tentatives de connexion dans Redis.")
             login_user(user, remember=True) # <-- MODIFICATION : Utilise la durée de vie de la session
             # On initialise le timer d'inactivité
             session['last_activity_time'] = time.time()
@@ -181,11 +188,12 @@ def connexion():
         else:
             # 3. En cas d'échec, on incrémente le compteur
             if redis:
-                # Incrémente le compteur et vérifie s'il atteint la limite
-                current_attempts = redis.incr(attempt_key)
-                if current_attempts >= MAX_ATTEMPTS:
-                    # Si la limite est atteinte, on bloque le compte pour 15 minutes
-                    redis.expire(attempt_key, LOCKOUT_PERIOD_SECONDS)
+                try:
+                    current_attempts = redis.incr(attempt_key)
+                    if current_attempts >= MAX_ATTEMPTS:
+                        redis.expire(attempt_key, LOCKOUT_PERIOD_SECONDS)
+                except RedisError:
+                    current_app.logger.warning("Impossible d'enregistrer les tentatives de connexion dans Redis.")
             flash('Identifiants incorrects', 'danger')
     return render_template('connexion.html')
 @auth_bp.route('/index')

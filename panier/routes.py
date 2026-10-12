@@ -3,11 +3,12 @@ import logging
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, session
 from datetime import datetime, timedelta
 from flask_login import login_required, current_user
-from ext import csrf, db_session
+from ext import csrf, db_session, limiter
 from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
 from services.payment_service import initiate_remote_payment
 from services.pagination import parse_cursor
 from werkzeug.exceptions import ServiceUnavailable
+from services.rate_limits import account_rate_limit_key
 
 # Configuration d'un logger si ce n'est pas déjà fait
 logger = logging.getLogger(__name__)
@@ -120,6 +121,8 @@ def supprimer_article(cart_id):
     return jsonify({"message": "Article retiré du panier."}), 200
 
 @panier_bp.route("/paiement/mobile", methods=["GET", "POST"])
+@limiter.limit("10 per minute", methods=["POST"])
+@limiter.limit("5 per minute", key_func=account_rate_limit_key, methods=["POST"])
 @login_required
 def mobile_money_payment():
     """Affiche le formulaire pour le paiement mobile et traite la soumission."""
