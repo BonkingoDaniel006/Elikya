@@ -36,7 +36,7 @@
                     <p class="price-note">
                         Prix affiché au client :
                         <strong id="prix-affiche" aria-live="polite">Saisissez un prix</strong>.
-                        Moins de 600 $ : 620 $ ; à partir de 600 $ : prix + 2 %.
+                        Moins de 1000 $ : prix + 20 $ ; à partir de 1000 $ : prix + 2 %.
                     </p>
                 </div>
 
@@ -92,8 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        const finalPrice = enteredPrice < 600
-            ? 620
+        const finalPrice = enteredPrice < 1000
+            ? enteredPrice + 20
             : Math.round((enteredPrice * 1.02 + Number.EPSILON) * 100) / 100;
         displayedPrice.textContent = `${finalPrice.toLocaleString('fr-FR', {
             minimumFractionDigits: 2,

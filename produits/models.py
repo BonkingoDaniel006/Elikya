@@ -17,8 +17,10 @@ def calculer_prix_affiche(price):
     except (InvalidOperation, ValueError) as exc:
         raise ValueError("Le prix doit être un nombre positif valide.") from exc
 
-    if prix_saisi < Decimal("600"):
-        return Decimal("620.00")
+    if prix_saisi < Decimal("1000"):
+        return (prix_saisi + Decimal("20.00")).quantize(
+            cent, rounding=ROUND_HALF_UP
+        )
 
     return (prix_saisi * Decimal("1.02")).quantize(
         cent, rounding=ROUND_HALF_UP
