@@ -5,7 +5,7 @@ from datetime import datetime, date
 import time
 from redis.exceptions import ConnectionError as RedisConnectionError
 from ext import bcrypt
-from ext import get_redis_client, get_db_connection
+from ext import get_redis_client, db_session
 from auth.models import User # Gardez cette ligne
 from produits.models import Produits # MODIFICATION: Importer depuis produits.models
 from auth.services import process_registration, process_otp_validation
@@ -190,17 +190,14 @@ def connexion():
 @auth_bp.route('/index')
 @login_required
 def index():
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("""
-        SELECT p.*, u.nom_boutique 
-        FROM produits p 
-        JOIN users u ON p.seller_id = u.id
+    with db_session(dictionary=True) as (_, cursor):
+        cursor.execute("""
+            SELECT p.*, u.nom_boutique
+            FROM produits p
+            JOIN users u ON p.seller_id = u.id
         """)
-    produits = cursor.fetchall()
+        produits = cursor.fetchall()
     random.shuffle(produits)
-    cursor.close()
-    conn.close()
     claims = current_user.get_claims()
     
     return render_template(

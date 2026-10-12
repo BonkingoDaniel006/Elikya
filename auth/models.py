@@ -1,5 +1,5 @@
 from flask_login import UserMixin
-from ext import get_db_connection
+from ext import db_session
 
 class User(UserMixin):
     def __init__(self, id, email, password, prenom=None, nom=None, postnom=None, description=None, profil=None, adresse=None, nom_boutique=None):
@@ -30,31 +30,24 @@ class User(UserMixin):
 
     @classmethod
     def get_by_id(cls, user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        # CORRECTION : On sélectionne toutes les colonnes nécessaires pour le header
-        cursor.execute(
-            "SELECT id, email, password, prenom, nom, postnom, description, profil, adresse, nom_boutique FROM users WHERE id = %s", 
-            (user_id,)
-        )
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(
+                "SELECT id, email, password, prenom, nom, postnom, description, profil, adresse, nom_boutique FROM users WHERE id = %s",
+                (user_id,)
+            )
+            row = cursor.fetchone()
         if row:
             return cls(**row)
         return None
+
     @classmethod
     def get_by_email(cls, email):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        # CORRECTION : On sélectionne toutes les colonnes nécessaires pour le header
-        cursor.execute(
-            "SELECT id, email, password, prenom, nom, postnom, description, profil, adresse, nom_boutique FROM users WHERE email = %s", 
-            (email,)
-        )
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(
+                "SELECT id, email, password, prenom, nom, postnom, description, profil, adresse, nom_boutique FROM users WHERE email = %s",
+                (email,)
+            )
+            row = cursor.fetchone()
         if row:
             return cls(**row)
         return None
@@ -62,8 +55,6 @@ class User(UserMixin):
     @classmethod
     def create_user(cls, data, hashed_password):
         """Insère un nouvel utilisateur en base de données après validation OTP."""
-        conn = get_db_connection()
-        cursor = conn.cursor()
         query = """
             INSERT INTO users (prenom, nom, postnom, email, naissance, password, description, adresse, nom_boutique)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
@@ -73,9 +64,6 @@ class User(UserMixin):
             data['naissance'], hashed_password, data['description'],
             data['adresse'], data['nom_boutique']
         )
-        try:
+        with db_session() as (conn, cursor):
             cursor.execute(query, values)
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()

@@ -1,4 +1,4 @@
-from ext import get_db_connection
+from ext import db_session
 import os
 import uuid
 from werkzeug.datastructures import FileStorage
@@ -28,12 +28,12 @@ class Buyer():
         }
     @classmethod
     def get_by_id(cls, user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT id, prenom, nom, postnom, email, description, profil, adresse FROM users WHERE id = %s", (user_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(
+                "SELECT id, prenom, nom, postnom, email, description, profil, adresse FROM users WHERE id = %s",
+                (user_id,)
+            )
+            row = cursor.fetchone()
         if row:
             return cls(
                 email=row['email'],
@@ -50,12 +50,9 @@ class Buyer():
 
     @classmethod
     def verifier_mot_de_passe(cls, user_id, password_a_tester, bcrypt_instance):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT password FROM users WHERE id = %s", (user_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute("SELECT password FROM users WHERE id = %s", (user_id,))
+            row = cursor.fetchone()
         
         if row and row['password']:
             # Utilise l'instance bcrypt passée pour valider le hash
@@ -64,24 +61,14 @@ class Buyer():
     
     @classmethod
     def get_panier(cls, user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        try:
+        with db_session(dictionary=True) as (_, cursor):
             # Suppression de ORDER BY created_at DESC au cas où la colonne n'existerait pas
             cursor.execute("SELECT * FROM panier WHERE buyer_id = %s", (user_id,))
             cart_items = cursor.fetchall()
-            total = 0
-            for item in cart_items:
-                try:
-                    # Remplacement de la virgule par un point et conversion sécurisée
-                    total += float(str(item.get("prix_total", 0)).replace(',', '.'))
-                except ValueError:
-                    pass
-        except Exception as e:
-            cart_items, total = [], 0
-            print(f"Erreur SQL profil_acheteur: {e}")
-        cursor.close()
-        conn.close()
+        total = sum(
+            float(str(item.get("prix_total", 0)).replace(',', '.'))
+            for item in cart_items
+        )
         return cart_items, total
     
     @classmethod
@@ -104,9 +91,7 @@ class Buyer():
             else:
                 return False
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             # Construction dynamique de la requête SQL selon les données fournies
             query = "UPDATE users SET prenom = %s, nom = %s, postnom = %s, adresse = %s"
             params = [prenom, nom, postnom, adresse]
@@ -124,13 +109,7 @@ class Buyer():
 
             cursor.execute(query, tuple(params))
             conn.commit()
-            return True
-        except Exception as e:
-            print(f"Erreur lors de la modification : {e}")
-            return False
-        finally:
-            cursor.close()
-            conn.close()
+        return True
     
 
 
@@ -164,12 +143,12 @@ class Seller ():
 
     @classmethod
     def get_by_id(cls, user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
-        row = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(
+                "SELECT id, prenom, nom, postnom, email, naissance, description, profil, adresse, nom_boutique FROM users WHERE id = %s",
+                (user_id,)
+            )
+            row = cursor.fetchone()
         if row:
             return cls(
                 id=row['id'],
@@ -186,32 +165,23 @@ class Seller ():
         return None
     @classmethod
     def get_produits(cls, user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM produits WHERE seller_id = %s", (user_id,))
-        produits = cursor.fetchall()
-        cursor.close()
-        conn.close()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute("SELECT * FROM produits WHERE seller_id = %s", (user_id,))
+            produits = cursor.fetchall()
         return produits
     
     @classmethod
     def get_commandes(cls, user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM commande WHERE seller_id = %s", (user_id,))
-        commandes = cursor.fetchall()
-        cursor.close()
-        conn.close()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute("SELECT * FROM commande WHERE seller_id = %s", (user_id,))
+            commandes = cursor.fetchall()
         return commandes
     
     @classmethod
     def get_for_user(cls, user_id):
         """Récupère toutes les notifications pour un utilisateur, triées par date."""
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
         query = "SELECT * FROM notifications WHERE user_id = %s ORDER BY created_at DESC"
-        cursor.execute(query, (user_id,))
-        notifications = cursor.fetchall()
-        cursor.close()
-        conn.close()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(query, (user_id,))
+            notifications = cursor.fetchall()
         return notifications

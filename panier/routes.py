@@ -3,9 +3,10 @@ import logging
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, session
 from datetime import datetime, timedelta
 from flask_login import login_required, current_user
-from ext import csrf, get_db_connection
+from ext import csrf, db_session
 from panier.models import Panier, Commande, Suprimer_panier, Modifier_panier
 from services.payment_service import initiate_remote_payment
+from werkzeug.exceptions import ServiceUnavailable
 
 # Configuration d'un logger si ce n'est pas déjà fait
 logger = logging.getLogger(__name__)
@@ -81,22 +82,22 @@ def modifier_article(cart_id):
             flash("Article retiré du panier.", "success")
             return redirect(url_for('panier.panier'))
 
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        # On vérifie que l'article appartient bien à l'utilisateur
-        cursor.execute("SELECT product_price FROM panier WHERE id = %s AND buyer_id = %s", (cart_id, current_user.id))
-        item = cursor.fetchone()
+        with db_session(dictionary=True) as (_, cursor):
+            cursor.execute(
+                "SELECT product_price FROM panier WHERE id = %s AND buyer_id = %s",
+                (cart_id, current_user.id)
+            )
+            item = cursor.fetchone()
 
         if item:
             prix_total = quantite * float(item['product_price'])
             Modifier_panier.modifier(cart_id, quantite, prix_total)
             flash("Panier mis à jour.", "success")
+    except ServiceUnavailable:
+        raise
     except Exception as e:
         current_app.logger.error(f"Erreur modification panier: {e}")
         flash("Impossible de modifier la quantité.", "danger")
-    finally:
-        if 'cursor' in locals() and cursor: cursor.close()
-        if 'conn' in locals() and conn: conn.close()
 
     return redirect(url_for('panier.panier'))
 

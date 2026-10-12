@@ -1,4 +1,4 @@
-from ext import get_db_connection
+from ext import db_session
 
 class Panier():
     def __init__(self, id, buyer_id, buyer_first_name, buyer_last_name, product_id, product_name, product_price, product_description, product_image_url, seller_id, seller_name, quantite, prix_total):
@@ -35,51 +35,31 @@ class Panier():
         }
     @classmethod
     def get_panier(cls, user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        try:
+        with db_session(dictionary=True) as (_, cursor):
             # Suppression de ORDER BY created_at DESC au cas où la colonne n'existerait pas
             cursor.execute("SELECT * FROM panier WHERE buyer_id = %s", (user_id,))
             cart_items = cursor.fetchall()
-            total = 0
-            for item in cart_items:
-                try:
-                    # Remplacement de la virgule par un point et conversion sécurisée
-                    total += float(str(item.get("prix_total", 0)).replace(',', '.'))
-                except ValueError:
-                    pass
-        except Exception as e:
-            cart_items, total = [], 0
-            print(f"Erreur SQL profil_acheteur: {e}")
-        cursor.close()
-        conn.close()
+        total = sum(
+            float(str(item.get("prix_total", 0)).replace(',', '.'))
+            for item in cart_items
+        )
         return cart_items, total
 
     @classmethod
     def clear_panier(cls, user_id):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             cursor.execute("DELETE FROM panier WHERE buyer_id = %s", (user_id,))
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
 
 class Commande:
     @classmethod
     def create(cls, data_list):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             cursor.executemany("""
                 INSERT INTO commande (panier_id, buyer_id, buyer_first_name, buyer_last_name, adresse, product_id, product_name, product_price, product_description, product_image_url, seller_id, seller_name, quantite, prix_total, date_reception, date_livraison, heure_livraison, frais_livraison, etat)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """, data_list)
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
 
 
 class Suprimer_panier():
@@ -117,14 +97,9 @@ class Suprimer_panier():
         }
     @classmethod
     def supprimer(cls, id, buyer_id):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             cursor.execute("DELETE FROM panier WHERE id = %s AND buyer_id = %s", (id, buyer_id))
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
 
 
 
@@ -165,15 +140,10 @@ class Modifier_panier():
     
     @classmethod
     def modifier(cls, id, buyer_id, quantite, prix_total):
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        try:
+        with db_session() as (conn, cursor):
             cursor.execute("""
                 UPDATE panier 
                 SET quantite = %s, prix_total = %s 
                 WHERE id = %s AND buyer_id = %s
             """, (quantite, prix_total, id, buyer_id))
             conn.commit()
-        finally:
-            cursor.close()
-            conn.close()
